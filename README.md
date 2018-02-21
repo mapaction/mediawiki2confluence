@@ -22,7 +22,7 @@ You'll need a CLI tool from the Confluence. Follow the instructions at:
 
 > https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/98009238/CLI+Client+Installation+and+Use
 
-You can install this to the ignored `propietary` folder in this repository.
+You can untar that file in the ignored `propietary` folder in this repository.
 
 You can then do the following to get the `jira` executable on your `$PATH`:
 
