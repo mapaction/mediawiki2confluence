@@ -33,6 +33,10 @@ $ source .env
 
 Where the `.env` file contains definitions to extend your current `$PATH`.
 
+Once installed, refer to the [action reference] for commands.
+
+[action reference]: https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/60194830/Action+Reference
+
 # From Where To Where?
 
 > https://mediawiki.mapaction.org
