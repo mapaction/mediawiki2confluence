@@ -6,6 +6,16 @@
 [Aptivate]: http://www.aptivate.org
 [MapAction]: https://mapaction.org
 
+# Install It
+
+Get a local copy of [pipenv] and then run:
+
+[pipenv]: https://docs.pipenv.org
+
+```bash
+$ pipenv install --dev
+```
+
 # From Where To Where?
 
 > https://mediawiki.mapaction.org
