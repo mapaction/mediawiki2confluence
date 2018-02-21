@@ -6,7 +6,7 @@
 [Aptivate]: http://www.aptivate.org
 [MapAction]: https://mapaction.org
 
-# Install It
+# Install The Free Software
 
 Get a local copy of [pipenv] and then run:
 
@@ -15,6 +15,23 @@ Get a local copy of [pipenv] and then run:
 ```bash
 $ pipenv install --dev
 ```
+
+# Install the Non-Free Software
+
+You'll need a CLI tool from the Confluence. Follow the instructions at:
+
+> https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/98009238/CLI+Client+Installation+and+Use
+
+You can install this to the ignored `propietary` folder in this repository.
+
+You can then do the following to get the `jira` executable on your `$PATH`:
+
+```bash
+$ cp propietary/atlassian-cli-<version>/jira.sh propietary/atlassian-cli-<version>/jira
+$ source .env
+```
+
+Where the `.env` file contains definitions to extend your current `$PATH`.
 
 # From Where To Where?
 
