@@ -26,7 +26,7 @@ Untar that file in the ignored `propietary` folder in this repository.
 
 Once installed, refer to the [action reference] for commands.
 
-[action reference]: https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/60194830/Action+Reference
+[action reference]: https://bobswift.atlassian.net/wiki/spaces/CSOAP/overview
 
 # Configure the Environment
 
