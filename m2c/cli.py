@@ -11,6 +11,7 @@ WIKI_URL = 'https://wiki-test.mapaction.org/'
 
 # Please note, this was generated based on the comments in
 # https://docs.google.com/spreadsheets/d/1MGapwHaEAdcvD98HzYw91Ze295xI7SQKE0NPmf_pE6g/edit?usp=sharing
+# Updated format due to https://jira.atlassian.com/browse/CONFSERVER-7934
 TOP_LEVEL_SPACES = [
     {'general-guidance': {'labels': []}},
     {'standard-procedures': {
