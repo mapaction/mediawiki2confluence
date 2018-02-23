@@ -3,6 +3,8 @@ from os import environ
 import click
 
 
+# Please note, this was generated based on the comments in
+# https://docs.google.com/spreadsheets/d/1MGapwHaEAdcvD98HzYw91Ze295xI7SQKE0NPmf_pE6g/edit?usp=sharing
 TOP_LEVEL_SPACES = [
     {'general-guidance': {'labels': []}},
     {'standard-procedures': {
