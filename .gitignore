@@ -1,4 +1,4 @@
-/.env/
+.env
 /propietary/
 /*.egg*/
 /**/__pycache__/
