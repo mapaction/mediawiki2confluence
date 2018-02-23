@@ -1,10 +1,12 @@
+from itertools import chain
 from os import environ
+from pprint import pprint
 from subprocess import check_output
 
 import click
 
 
-WIKI_URL = 'wiki-test.mapaction.org'
+WIKI_URL = 'https://wiki-test.mapaction.org/'
 
 
 # Please note, this was generated based on the comments in
@@ -60,21 +62,40 @@ def get_credentials():
     return {'username': username, 'password': password}
 
 
-def get_jira_cmd():
-    """Assemble mandatory parameters for the jira command."""
+def get_confluence_cmd():
+    """Assemble mandatory parameters for the Confluence command."""
     try:
-        command_path = environ['JIRA_COMMAND_PATH']
+        command_path = environ['CONFLUENCE_COMMAND_PATH']
     except KeyError as error:
         click.fail('Unable to access {}'.format(str(error)))
 
-    base_cmd = '{cmd} --server "{srv}" --user "{user}" --password "{pword}"'
     credentials = get_credentials()
-    return base_cmd.format(
-        cmd=command_path,
-        srv=WIKI_URL,
-        user=credentials['username'],
-        pword=credentials['password']
-    )
+    return [
+        command_path,
+        '--server', WIKI_URL,
+        '--user', credentials['username'],
+        '--password', credentials['password']
+    ]
+
+
+def get_action_cmd(action, **arguments):
+    """Assemble the action command."""
+    command = [[
+        '--action',
+        '{}'.format(action)
+    ]]
+    for flag, value in arguments.items():
+        command.append(['--{}'.format(flag)])
+        command.append([value])
+    return [part for part in chain(*command)]
+
+
+def run_confluence_cmd(command, verbose=False):
+    """Run a confluence CLI command. Accepts a list."""
+    if verbose is True:
+        click.echo('Executing the following command:')
+        pprint(command)
+    return check_output(command)
 
 
 @click.group()
@@ -84,12 +105,20 @@ def main():
 
 
 @main.command()
-@click.option('--undo', help='Undo creation of the spaces')
-def spaces(undo):
+@click.option('--undo', is_flag=True, help='Undo creation of the spaces')
+@click.option('--verbose', is_flag=True, help='The computer will speak to you')
+def spaces(undo, verbose):
     """Create the agreed upon top level spaces"""
-    jira_base = get_jira_cmd()
-    __import__('ipdb').set_trace()
+    base = get_confluence_cmd()
+
+    space_cmd = get_action_cmd('addSpace', space='testspace', name='Test Space')
+    if undo:
+        space_cmd = get_action_cmd('removeSpace', space='testspace')
+
+    command = base + space_cmd
+    output = run_confluence_cmd(command, verbose=verbose)
+    click.echo(output)
+
     # for each key in TOP_LEVEL_SPACES, create a space
     # for each label inside that key, label that space with them
     # If we pass --undo, delete everything
-    pass
