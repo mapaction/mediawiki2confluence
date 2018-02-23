@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "159dbf43b35f3fa4ff76b91d52ec7af5e0b7e2cb56f9eb0f02f8d7eedda2c9dc"
+            "sha256": "fc60c1b1c19f88b2c67f44a8908b2f3bef08b6ff1c2a7ecca5b74da0fed8f574"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -9,9 +9,9 @@
             "os_name": "posix",
             "platform_machine": "x86_64",
             "platform_python_implementation": "CPython",
-            "platform_release": "4.9.0-5-amd64",
+            "platform_release": "4.9.0-6-amd64",
             "platform_system": "Linux",
-            "platform_version": "#1 SMP Debian 4.9.65-3+deb9u2 (2018-01-04)",
+            "platform_version": "#1 SMP Debian 4.9.82-1+deb9u2 (2018-02-21)",
             "python_full_version": "3.5.3",
             "python_version": "3.5",
             "sys_platform": "linux"
@@ -37,12 +37,23 @@
             ],
             "version": "==17.4.0"
         },
+        "click": {
+            "hashes": [
+                "sha256:29f99fc6125fbc931b758dc053b3114e55c77a6e4c6c3a2674a2dc986016381d",
+                "sha256:f15516df478d5a56180fbf80e68f206010e6d160fc39fa508b65e035fd75130b"
+            ],
+            "version": "==6.7"
+        },
         "decorator": {
             "hashes": [
                 "sha256:94d1d8905f5010d74bbbd86c30471255661a14187c45f8d7f3e5aa8540fdb2e5",
                 "sha256:7d46dd9f3ea1cf5f06ee0e4e1277ae618cf48dfb10ada7c8427cd46c42702a0e"
             ],
             "version": "==4.2.1"
+        },
+        "e1839a8": {
+            "editable": true,
+            "path": "."
         },
         "ipdb": {
             "hashes": [
