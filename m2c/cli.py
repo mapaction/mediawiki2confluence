@@ -1,6 +1,10 @@
 from os import environ
+from subprocess import check_output
 
 import click
+
+
+WIKI_URL = 'wiki-test.mapaction.org'
 
 
 # Please note, this was generated based on the comments in
@@ -46,20 +50,45 @@ TOP_LEVEL_SPACES = [
 ]
 
 
-def build_auth():
+def get_credentials():
     """Assemble the HTTP Basic Auth credentials from the environment."""
     try:
         username = environ['HTTP_BASIC_AUTH_USERNAME']
         password = environ['HTTP_BASIC_AUTH_PASSWORD']
-    except KeyError:
-        click.echo('Failed to retrieve Basic Auth credentials!')
-    return (username, password)
+    except KeyError as error:
+        click.fail('Unable to retrieve {}'.format(str(error)))
+    return {'username': username, 'password': password}
 
 
-@click.command()
+def get_jira_cmd():
+    """Assemble mandatory parameters for the jira command."""
+    try:
+        command_path = environ['JIRA_COMMAND_PATH']
+    except KeyError as error:
+        click.fail('Unable to access {}'.format(str(error)))
+
+    base_cmd = '{cmd} --server "{srv}" --user "{user}" --password "{pword}"'
+    credentials = get_credentials()
+    return base_cmd.format(
+        cmd=command_path,
+        srv=WIKI_URL,
+        user=credentials['username'],
+        pword=credentials['password']
+    )
+
+
+@click.group()
+def main():
+    """m2c: A bespoke MediaWiki to Confluence migration tool."""
+    pass
+
+
+@main.command()
 @click.option('--undo', help='Undo creation of the spaces')
 def spaces(undo):
     """Create the agreed upon top level spaces"""
+    jira_base = get_jira_cmd()
+    __import__('ipdb').set_trace()
     # for each key in TOP_LEVEL_SPACES, create a space
     # for each label inside that key, label that space with them
     # If we pass --undo, delete everything
