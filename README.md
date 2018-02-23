@@ -33,7 +33,7 @@ Once installed, refer to the [action reference] for commands.
 The program expects a number of environment variables to work properly. Please export:
 
 ```bash
-JIRA_COMMAND_PATH="${PWD}/propietary/atlassian-cli-7.6.0/jira" # for example
+CONFLUENCE_COMMAND_PATH="${PWD}/propietary/atlassian-cli-7.6.0/confluence" # for example
 HTTP_BASIC_AUTH_USERNAME="stallman"
 HTTP_BASIC_AUTH_PASSWORD="freesoftwarefreesociety"
 ```

@@ -60,10 +60,10 @@ def get_credentials():
     return {'username': username, 'password': password}
 
 
-def get_jira_cmd():
-    """Assemble mandatory parameters for the jira command."""
+def get_confluence_cmd():
+    """Assemble mandatory parameters for the Confluence command."""
     try:
-        command_path = environ['JIRA_COMMAND_PATH']
+        command_path = environ['CONFLUENCE_COMMAND_PATH']
     except KeyError as error:
         click.fail('Unable to access {}'.format(str(error)))
 
@@ -87,7 +87,7 @@ def main():
 @click.option('--undo', help='Undo creation of the spaces')
 def spaces(undo):
     """Create the agreed upon top level spaces"""
-    jira_base = get_jira_cmd()
+    confluence_base = get_confluence_cmd()
     __import__('ipdb').set_trace()
     # for each key in TOP_LEVEL_SPACES, create a space
     # for each label inside that key, label that space with them
