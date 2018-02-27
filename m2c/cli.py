@@ -99,6 +99,16 @@ def run_confluence_cmd(command, verbose=False):
     return check_output(command)
 
 
+def format_space_key(label):
+    """Get the space key in the right format."""
+    return "".join(label.split('-'))
+
+
+def format_space_name(label):
+    """Get the space label in the right format."""
+    return " ".join(map(str.capitalize, label.split('-')))
+
+
 @click.group()
 def main():
     """m2c: A bespoke MediaWiki to Confluence migration tool."""
@@ -108,13 +118,13 @@ def main():
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the spaces')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def spaces(undo, verbose):
+def static_spaces(undo, verbose):
     """Create top level spaces"""
     space_keys = chain(*[k.keys() for k in TOP_LEVEL_SPACES])
 
     for space_key in space_keys:
-        formatted_key = "".join(space_key.split('-'))
-        space_name = " ".join(map(str.capitalize, space_key.split('-')))
+        formatted_key = format_space_key(space_key)
+        space_name = format_space_name(space_key)
 
         action, args = 'addSpace', dict(space=formatted_key, name=space_name)
         if undo:
@@ -131,7 +141,7 @@ def spaces(undo, verbose):
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the labels')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def labels(undo, verbose):
+def static_labels(undo, verbose):
     """Create labels on top level spaces"""
     space_keys = chain(*[k.keys() for k in TOP_LEVEL_SPACES])
     for key, space_dict in zip(space_keys, TOP_LEVEL_SPACES):
@@ -141,7 +151,7 @@ def labels(undo, verbose):
             continue
 
         formatted_labels = ','.join(labels)
-        formatted_key = ''.join(key.split('-'))
+        formatted_key = format_space_key(key)
 
         action = 'removeLabels' if undo else 'addLabels'
         args = dict(space=formatted_key, labels=formatted_labels)
