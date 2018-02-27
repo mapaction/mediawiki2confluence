@@ -116,17 +116,17 @@ def run_confluence_cmd(command, verbose=False, debug=False):
         return check_output(command)
     except (CalledProcessError, ValueError) as err:
         click.echo('Failed to run command, saw: {}'.format(str(err)))
-        raise click.Abort()
+        click.echo('Continuing ...')
 
 
 def format_space_key(label):
     """Get the space key in the right format."""
-    return "".join(label.split('-'))
+    return ''.join(label.split('-'))
 
 
 def format_space_name(label):
     """Get the space label in the right format."""
-    return " ".join(map(str.capitalize, label.split('-')))
+    return ' '.join(map(str.capitalize, label.split('-')))
 
 
 def get_mw_client():
