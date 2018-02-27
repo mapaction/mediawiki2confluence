@@ -20,7 +20,7 @@ $ pipenv install --dev
 
 You'll need a CLI tool from the Confluence. Follow the instructions at:
 
-> https://bobswift.atlassian.net/wiki/spaces/ACLI/pages/98009238/CLI+Client+Installation+and+Use
+> https://bobswift.atlassian.net/wiki/spaces/CSOAP/pages/10584068/Reference
 
 Untar that file in the ignored `propietary` folder in this repository.
 
