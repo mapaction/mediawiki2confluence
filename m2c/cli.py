@@ -167,6 +167,14 @@ def static_labels(undo, verbose):
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the labels')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
+def migrate_categories(undo, verbose):
+    """Migrate MediaWiki categories."""
+    pass
+
+
+@main.command()
+@click.option('--undo', is_flag=True, help='Undo creation of the labels')
+@click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def pages(undo, verbose):
     """Migrates pages from MediaWiki."""
     pass
