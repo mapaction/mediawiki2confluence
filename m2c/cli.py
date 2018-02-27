@@ -381,7 +381,7 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the images')
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-@click.option('--limit', default=None, help='Limit the number of pages')
+@click.option('--limit', default=None, help='Limit the number of images')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def migrate_images(undo, verbose, limit, debug):
     """Migrates images from MediaWiki."""
