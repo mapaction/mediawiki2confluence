@@ -6,6 +6,7 @@ from subprocess import CalledProcessError, check_output
 
 import click
 import requests
+from bs4 import BeautifulSoup
 
 import mwclient
 import pypandoc
@@ -152,8 +153,6 @@ def category_cleaner(category):
         if character in invalid:
             category = category.replace(character, VALID)
 
-    # FIXME: Stop having double/triple/blah ----'s. Filter to one.
-
     return category
 
 
@@ -208,19 +207,61 @@ def parse_image_name(image):
     return image.name.replace('File:', '')
 
 
-def to_markdown(content):
+def with_markdown(content):
     """User pandoc to get markdown from MediaWiki format."""
-    return pypandoc.convert_text(
+    converted = pypandoc.convert_text(
         content,
         'markdown_strict',
         format='mediawiki'
     )
+    dropped = drop_page_categories(converted)
+    return convert_image_format(dropped)
+
+
+def convert_image_format(html):
+    """Make images appear in confluence format."""
+    separated = html.split('\n')
+    for index, line in enumerate(separated):
+        if '<img' in line:
+            soup = BeautifulSoup(line, 'html.parser')
+            src = soup.select('img')[0]['src']
+
+            dimensions = ""
+
+            try:
+                width = soup.select('img')[0]['width']
+                dimensions += 'ac:width={}'.format(width)
+            except KeyError:
+                pass
+
+            try:
+                height = soup.select('img')[0]['height']
+                dimensions += 'ac:height={}'.format(height)
+            except KeyError:
+                pass
+
+            link_template = (
+                '<p><ac:image ac:thumbnail="true" {dimensions}">'
+                '<ri:attachment ri:filename="{filename}"/>'
+                '</ac:image></p>'
+            )
+            separated[index] = link_template.format(
+                filename=src, dimensions=dimensions
+            )
+    return '\n'.join(separated)
+
+
+def drop_page_categories(html):
+    """Remove categories listing from content source."""
+    separated = html.split('\n')
+    filtered = filter(lambda l: not l.startswith('<Category'), separated)
+    return '\n'.join(filtered)
 
 
 def parse_content(page, markdown):
     """Retrieve the content of the page."""
     if markdown:
-        return to_markdown(page.text())
+        return with_markdown(page.text())
     return page.text()
 
 
@@ -383,7 +424,6 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
             verbose=verbose,
             debug=debug,
         )
-
         click.echo(output)
 
 
