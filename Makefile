@@ -7,7 +7,7 @@ gitsync:
 .PHONY: gitsync
 
 repl:
-	@ipython -i $(SOURCE_DIR)/cli.py
+	@$(PIPENVRUN) ipython -i $(SOURCE_DIR)/cli.py
 
 lint:
 	@$(PIPENVRUN) pylama $(SOURCE_DIR)

@@ -1,15 +1,19 @@
 from itertools import chain
 from os import environ
+from os.path import abspath, dirname
 from pprint import pprint
-from subprocess import check_output
+from subprocess import CalledProcessError, check_output
 
 import click
+import requests
 
 import mwclient
+import pypandoc
 
 
 CONFLUENCE_URL = 'https://wiki-test.mapaction.org/'
 MEDIAWIKI_URL = 'mediawiki.mapaction.org'
+IMAGES_DIR = '{}/../images'.format(dirname(abspath(__file__)))
 
 
 # Please note, this was generated based on the comments in
@@ -82,24 +86,37 @@ def get_confluence_cmd():
     ]
 
 
-def get_action_cmd(action, **arguments):
+def get_action_cmd(action, *args, **kwargs):
     """Assemble the action command."""
     command = [[
         '--action',
         '{}'.format(action)
     ]]
-    for flag, value in arguments.items():
+
+    for argument in args:
+        command.append(['--{}'.format(argument)])
+
+    for flag, value in kwargs.items():
         command.append(['--{}'.format(flag)])
         command.append([value])
+
     return [part for part in chain(*command)]
 
 
-def run_confluence_cmd(command, verbose=False):
+def run_confluence_cmd(command, verbose=False, debug=False):
     """Run a confluence CLI command. Accepts a list."""
     if verbose is True:
         click.echo('Executing the following command:')
         pprint(command)
-    return check_output(command)
+
+    if debug:
+        __import__('ipdb').set_trace()
+
+    try:
+        return check_output(command)
+    except (CalledProcessError, ValueError) as err:
+        click.echo('Failed to run command, saw: {}'.format(str(err)))
+        raise click.Abort()
 
 
 def format_space_key(label):
@@ -135,7 +152,15 @@ def category_cleaner(category):
         if character in invalid:
             category = category.replace(character, VALID)
 
+    # FIXME: Stop having double/triple/blah ----'s. Filter to one.
+
     return category
+
+
+def clean_mw_categories(categories):
+    """Clean up parsed MediaWiki categories."""
+    formatted = map(lambda cat: cat.replace('Category:', ''), categories)
+    return list(map(category_cleaner, formatted))
 
 
 def mwprefix(string):
@@ -157,6 +182,66 @@ def get_static_labels():
     return chain(*labels)
 
 
+def parse_space(page):
+    """Find which space the page lands in after migration."""
+    mw_categories = clean_mw_categories([
+        cat.name for cat in page.categories()
+    ])
+
+    space_keys = get_static_spaces()
+    for key, space_dict in zip(space_keys, TOP_LEVEL_SPACES):
+        labels = space_dict[key]['labels']
+        cleaned = map(category_cleaner, labels)
+        if set(mw_categories).intersection(cleaned):
+            return key.replace('-', '')
+
+    return 'general-guidance'.replace('-', '')
+
+
+def parse_title(page):
+    """Parse the title of the page."""
+    return page.name
+
+
+def parse_image_name(image):
+    """Parse the name of the image."""
+    return image.name.replace('File:', '')
+
+
+def to_markdown(content):
+    """User pandoc to get markdown from MediaWiki format."""
+    return pypandoc.convert_text(
+        content,
+        'markdown',
+        format='mediawiki'
+    )
+
+
+def parse_content(page, markdown):
+    """Retrieve the content of the page."""
+    if markdown:
+        return to_markdown(page.text())
+    return page.text()
+
+
+def parse_labels(page):
+    """Parse labels for the page."""
+    return ",".join(clean_mw_categories(
+        [cat.name for cat in page.categories()]
+    ))
+
+
+def download_image(image):
+    """Download the image from MediaWiki."""
+    url = image._info['imageinfo'][0]['url']
+    response = requests.get(url, stream=True)
+    location = '{}/{}'.format(IMAGES_DIR, parse_image_name(image))
+    handle = open(location, 'wb')
+    for chunk in response.iter_content(chunk_size=512):
+        handle.write(chunk)
+    return location
+
+
 @click.group()
 def main():
     """m2c: A bespoke MediaWiki to Confluence migration tool."""
@@ -166,7 +251,8 @@ def main():
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the spaces')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def static_spaces(undo, verbose):
+@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+def static_spaces(undo, verbose, debug):
     """Create top level spaces"""
     space_keys = get_static_spaces()
 
@@ -174,22 +260,23 @@ def static_spaces(undo, verbose):
         formatted_key = format_space_key(space_key)
         space_name = format_space_name(space_key)
 
-        action, args = 'addSpace', dict(space=formatted_key, name=space_name)
+        action, kwargs = 'addSpace', dict(space=formatted_key, name=space_name)
         if undo:
-            action, args = 'removeSpace', dict(space=formatted_key)
+            action, kwargs = 'removeSpace', dict(space=formatted_key)
 
-        space_cmd = get_action_cmd(action, **args)
+        space_cmd = get_action_cmd(action, **kwargs)
         base = get_confluence_cmd()
         command = base + space_cmd
 
-        output = run_confluence_cmd(command, verbose=verbose)
+        output = run_confluence_cmd(command, verbose=verbose, debug=debug)
         click.echo(output)
 
 
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the labels')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def static_labels(undo, verbose):
+@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+def static_labels(undo, verbose, debug):
     """Create labels on top level spaces"""
     space_keys = get_static_spaces()
 
@@ -205,49 +292,132 @@ def static_labels(undo, verbose):
         formatted_key = format_space_key(key)
 
         action = 'removeLabels' if undo else 'addLabels'
-        args = dict(space=formatted_key, labels=formatted_labels)
+        kwargs = dict(space=formatted_key, labels=formatted_labels)
 
-        label_cmd = get_action_cmd(action, **args)
+        label_cmd = get_action_cmd(action, **kwargs)
         base = get_confluence_cmd()
         command = base + label_cmd
 
-        output = run_confluence_cmd(command, verbose=verbose)
+        output = run_confluence_cmd(command, verbose=verbose, debug=debug)
         click.echo(output)
 
 
 @main.command()
-@click.option('--undo', is_flag=True, help='Undo creation of the labels')
+@click.option('--undo', is_flag=True, help='Undo creation of the categories')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def migrate_categories(undo, verbose):
+@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+def migrate_categories(undo, verbose, debug):
     """Migrate MediaWiki categories."""
-    AGREED_SPACE = 'generalguidance'
+    AGREED_SPACE = 'general-guidance'
 
     mwclient = get_mw_client()
 
     labels = [label for label in get_static_labels()]
-    cleaned_labels = set(list(map(category_cleaner, labels)))
-
-    categories = [category.name for category in mwclient.allcategories()]
-    formatted = map(lambda cat: cat.replace('Category:', ''), categories)
-    cleaned_categories = set(list(map(category_cleaner, formatted)))
-
-    remaining = cleaned_categories.difference(cleaned_labels)
+    cleaned_labels = list(map(category_cleaner, labels))
+    categories = clean_mw_categories([
+        cat.name for cat in mwclient.allcategories()
+    ])
+    remaining = set(categories).difference(set(cleaned_labels))
     formatted_remaining = ",".join(map(mwprefix, remaining))
 
     action = 'removeLabels' if undo else 'addLabels'
-    args = dict(space=AGREED_SPACE, labels=formatted_remaining)
+    kwargs = dict(
+        space=AGREED_SPACE.replace('-', ''),
+        labels=formatted_remaining
+    )
 
-    label_cmd = get_action_cmd(action, **args)
+    label_cmd = get_action_cmd(action, **kwargs)
     base = get_confluence_cmd()
     command = base + label_cmd
 
-    output = run_confluence_cmd(command, verbose=verbose)
+    output = run_confluence_cmd(command, verbose=verbose, debug=debug)
     click.echo(output)
 
 
 @main.command()
-@click.option('--undo', is_flag=True, help='Undo creation of the labels')
+@click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def pages(undo, verbose):
+@click.option('--limit', default=None, help='Limit the number of pages')
+@click.option('--markdown', is_flag=True, help='Migrate with markdown')
+@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+def migrate_pages(undo, verbose, limit, markdown, debug):
     """Migrates pages from MediaWiki."""
-    pass
+    mwclient = get_mw_client()
+
+    if limit is not None:
+        pages = [p for p in mwclient.allpages()][:int(limit)]
+    else:
+        pages = [p for p in mwclient.allpages()]
+
+    for page in pages:
+        action, args, kwargs = 'addPage', [], {}
+
+        space = parse_space(page)
+        title = parse_title(page)
+        content = parse_content(page, markdown=markdown)
+        labels = parse_labels(page)
+
+        kwargs = dict(
+            space=space,
+            title=title,
+            content=content,
+            labels=labels
+        )
+
+        if markdown:
+            args = ['markdown']
+
+        if undo:
+            action, kwargs = 'removePage', dict(space=space, title=title)
+
+        label_cmd = get_action_cmd(action, *args, **kwargs)
+        base = get_confluence_cmd()
+        command = base + label_cmd
+
+        output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+        click.echo(output)
+
+
+@main.command()
+@click.option('--undo', is_flag=True, help='Undo creation of the images')
+@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+@click.option('--limit', default=None, help='Limit the number of pages')
+@click.option('--verbose', is_flag=True, help='The computer will speak to you')
+def migrate_images(undo, verbose, limit, debug):
+    """Migrates images from MediaWiki."""
+    mwclient = get_mw_client()
+
+    if limit is not None:
+        pages = [p for p in mwclient.allpages()][:int(limit)]
+    else:
+        pages = [p for p in mwclient.allpages()]
+
+    for page in pages:
+        images = [img for img in page.images()]
+        for image in images:
+            action, args, kwargs = 'addAttachment', [], {}
+
+            space = parse_space(page)
+            title = parse_title(page)
+            name = parse_image_name(image)
+            location = download_image(image)
+
+            kwargs = dict(
+                space=space,
+                title=title,
+                name=name,
+                file=location,
+            )
+
+            if undo:
+                action, kwargs = (
+                    'removeAttachment',
+                    dict(space=space, name=name, title=title)
+                )
+
+            label_cmd = get_action_cmd(action, *args, **kwargs)
+            base = get_confluence_cmd()
+            command = base + label_cmd
+
+            output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+            click.echo(output)

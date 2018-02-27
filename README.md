@@ -50,13 +50,27 @@ $ pipenv run m2c --help
 
 # Run Things in Order
 
-The migration, so far, is run in the following order:
+First of all, create a image downloads directory with:
+
+```bash
+$ mkdir -p images
+```
+
+Then, the migration, so far, is run in the following order:
 
 ```
 $ m2c static_spaces
 $ m2c static_labels
 $ m2c migrate_categories
+$ m2c migrate_pages
+$ m2c migrate_images
 ```
+
+At any step, the `--undo` flag can undo your changes.
+
+You can debug failing commands with `--debug`.
+
+You can limit the number of migrations with `--limit`.
 
 # From Where To Where?
 

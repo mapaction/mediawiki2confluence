@@ -2,3 +2,5 @@
 /propietary/
 /*.egg*/
 /**/__pycache__/
+testfiles/
+images/
