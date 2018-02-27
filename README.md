@@ -62,15 +62,9 @@ Then, the migration, so far, is run in the following order:
 $ m2c static_spaces
 $ m2c static_labels
 $ m2c migrate_categories
-$ m2c migrate_pages
+$ m2c migrate_pages --markdown
 $ m2c migrate_images
 ```
-
-At any step, the `--undo` flag can undo your changes.
-
-You can debug failing commands with `--debug`.
-
-You can limit the number of migrations with `--limit`.
 
 # From Where To Where?
 
