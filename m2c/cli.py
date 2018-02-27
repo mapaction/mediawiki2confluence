@@ -152,3 +152,11 @@ def labels(undo, verbose):
 
         output = run_confluence_cmd(command, verbose=verbose)
         click.echo(output)
+
+
+@main.command()
+@click.option('--undo', is_flag=True, help='Undo creation of the labels')
+@click.option('--verbose', is_flag=True, help='The computer will speak to you')
+def pages(undo, verbose):
+    """Migrates pages from MediaWiki."""
+    pass
