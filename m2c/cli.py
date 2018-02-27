@@ -5,49 +5,52 @@ from subprocess import check_output
 
 import click
 
+import mwclient
 
-WIKI_URL = 'https://wiki-test.mapaction.org/'
+
+CONFLUENCE_URL = 'https://wiki-test.mapaction.org/'
+MEDIAWIKI_URL = 'mediawiki.mapaction.org'
 
 
 # Please note, this was generated based on the comments in
 # https://docs.google.com/spreadsheets/d/1MGapwHaEAdcvD98HzYw91Ze295xI7SQKE0NPmf_pE6g/edit?usp=sharing
 # Updated format due to https://jira.atlassian.com/browse/CONFSERVER-7934
 TOP_LEVEL_SPACES = [
-    {'mw-general-guidance': {'labels': []}},
-    {'mw-standard-procedures': {
+    {'general-guidance': {'labels': []}},
+    {'standard-procedures': {
         'labels': [
-            'Current_SOPs,_SAPs_and_Security_Manual',
+            'Current SOPs, SAPs and Security Manual',
             'Security Manual',
             'Non-MapAction Security Advice',
             'Standard Administrative Procedures',
-            'SAP 01: General-Policies',
-            'SAP 02: Human-Resources',
-            'SAP 03: Risk-Management',
-            'SAP 04: Financial-Management',
-            'SAP 05: Fundraising-and-Marketing',
-            'SAP 05: 01-External-Communications',
-            'SAP 06: Quality-Assurance',
-            'SAP 07: Stakeholder-Communications',
-            'SAP 08: Information-Technology',
-            'SAP 09: Institutional-Partnerships',
+            'SAP 01: General Policies',
+            'SAP 02: Human Resources',
+            'SAP 03: Risk Management',
+            'SAP 04: Financial Management',
+            'SAP 05: Fundraising and Marketing',
+            'SAP 05.01: External Communications',
+            'SAP 06: Quality Assurance',
+            'SAP 07: Stakeholder Communications',
+            'SAP 08: Information Technology',
+            'SAP 09: Institutional Partnerships',
             'SAP 09.01: ECHO',
             'SAP 09.02: USAID',
             'SAP 10: Equipment Accounting and Management',
             'Standard Operational Procedures',
         ]
     }},
-    {'mw-internal-training': {
+    {'internal-training': {
         'labels': [
-            '2017_Team_Training',
-            '2016_Team_Training',
-            '2015_Team_Training',
-            '2014_Team_Training',
-            '2013_Team_Training',
-            '2012_Team_Training',
-            '2011_Team_Training',
-            'Team_Training_Diary',
-            'External_Training_(Cost_Recoverable)',
-            'Partner_Training',
+            '2017 Team Training',
+            '2016 Team Training',
+            '2015 Team Training',
+            '2014 Team Training',
+            '2013 Team Training',
+            '2012 Team Training',
+            '2011 Team Training',
+            'Team Training Diary',
+            'External Training (Cost Recoverable)',
+            'Partner Training',
         ]
     }}
 ]
@@ -73,7 +76,7 @@ def get_confluence_cmd():
     credentials = get_credentials()
     return [
         command_path,
-        '--server', WIKI_URL,
+        '--server', CONFLUENCE_URL,
         '--user', credentials['username'],
         '--password', credentials['password']
     ]
@@ -109,11 +112,25 @@ def format_space_name(label):
     return " ".join(map(str.capitalize, label.split('-')))
 
 
+def get_mw_client():
+    """Build MediaWiki client connection."""
+    try:
+        username = environ['MEDIAWIKI_USERNAME']
+        password = environ['MEDIAWIKI_PASSWORD']
+    except KeyError as error:
+        click.fail('Unable to retrieve {}'.format(str(error)))
+
+    client = mwclient.Site(MEDIAWIKI_URL, path='/')
+    client.login(username, password)
+
+    return client
+
+
 def category_cleaner(category):
     """Remove Confluence invalid characters from categories."""
     VALID = '-'
 
-    invalid = [' ', ':', '(', ')', '_', ',']
+    invalid = [' ', ':', '(', ')', '_', ',', '.', '&']
     for character in category:
         if character in invalid:
             category = category.replace(character, VALID)
@@ -203,10 +220,29 @@ def static_labels(undo, verbose):
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def migrate_categories(undo, verbose):
     """Migrate MediaWiki categories."""
-    # get all the static labels here
-    # get the list of all categories from the mw
-    # filter out the ones we have
-    # put the rest in the general-guidance space
+    AGREED_SPACE = 'generalguidance'
+
+    mwclient = get_mw_client()
+
+    labels = [label for label in get_static_labels()]
+    cleaned_labels = set(list(map(category_cleaner, labels)))
+
+    categories = [category.name for category in mwclient.allcategories()]
+    formatted = map(lambda cat: cat.replace('Category:', ''), categories)
+    cleaned_categories = set(list(map(category_cleaner, formatted)))
+
+    remaining = cleaned_categories.difference(cleaned_labels)
+    formatted_remaining = ",".join(map(mwprefix, remaining))
+
+    action = 'removeLabels' if undo else 'addLabels'
+    args = dict(space=AGREED_SPACE, labels=formatted_remaining)
+
+    label_cmd = get_action_cmd(action, **args)
+    base = get_confluence_cmd()
+    command = base + label_cmd
+
+    output = run_confluence_cmd(command, verbose=verbose)
+    click.echo(output)
 
 
 @main.command()

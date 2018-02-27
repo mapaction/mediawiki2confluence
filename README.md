@@ -36,6 +36,8 @@ The program expects a number of environment variables to work properly. Please e
 CONFLUENCE_COMMAND_PATH="${PWD}/propietary/atlassian-cli-7.6.0/confluence" # for example
 HTTP_BASIC_AUTH_USERNAME="stallman"
 HTTP_BASIC_AUTH_PASSWORD="freesoftwarefreesociety"
+MEDIAWIKI_USERNAME='stallman'
+MEDIAWIKI_PASSWORD='ilikeparrots'
 ```
 
 # Use the CLI Tool
@@ -44,6 +46,16 @@ Once you've ran the `pipenv` incantation, you can access the tool with:
 
 ```
 $ pipenv run m2c --help
+```
+
+# Run Things in Order
+
+The migration, so far, is run in the following order:
+
+```
+$ m2c static_spaces
+$ m2c static_labels
+$ m2c migrate_categories
 ```
 
 # From Where To Where?
