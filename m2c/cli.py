@@ -268,7 +268,11 @@ def static_spaces(undo, verbose, debug):
         base = get_confluence_cmd()
         command = base + space_cmd
 
-        output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+        output = run_confluence_cmd(
+            command,
+            verbose=verbose,
+            debug=debug,
+        )
         click.echo(output)
 
 
@@ -374,7 +378,12 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
         base = get_confluence_cmd()
         command = base + label_cmd
 
-        output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+        output = run_confluence_cmd(
+            command,
+            verbose=verbose,
+            debug=debug,
+        )
+
         click.echo(output)
 
 
@@ -383,7 +392,7 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
 @click.option('--limit', default=None, help='Limit the number of images')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def migrate_images(undo, verbose, limit, debug):
+def migrate_images(undo, debug, limit, verbose):
     """Migrates images from MediaWiki."""
     mwclient = get_mw_client()
 
@@ -419,5 +428,9 @@ def migrate_images(undo, verbose, limit, debug):
             base = get_confluence_cmd()
             command = base + label_cmd
 
-            output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+            output = run_confluence_cmd(
+                command,
+                verbose=verbose,
+                debug=debug,
+            )
             click.echo(output)
