@@ -13,41 +13,41 @@ WIKI_URL = 'https://wiki-test.mapaction.org/'
 # https://docs.google.com/spreadsheets/d/1MGapwHaEAdcvD98HzYw91Ze295xI7SQKE0NPmf_pE6g/edit?usp=sharing
 # Updated format due to https://jira.atlassian.com/browse/CONFSERVER-7934
 TOP_LEVEL_SPACES = [
-    {'general-guidance': {'labels': []}},
-    {'standard-procedures': {
+    {'mw-general-guidance': {'labels': []}},
+    {'mw-standard-procedures': {
         'labels': [
-            'Current-SOPs-SAPs-and-Security-Manual',
-            'Security-Manual',
-            'Non-MapAction Security-Advice',
-            'Standard-Administrative-Procedures',
-            'SAP-01-General-Policies',
-            'SAP-02-Human-Resources',
-            'SAP-03-Risk-Management',
-            'SAP-04-Financial-Management',
-            'SAP-05-Fundraising-and-Marketing',
-            'SAP-05-01-External-Communications',
-            'SAP-06-Quality-Assurance',
-            'SAP-07-Stakeholder-Communications',
-            'SAP-08-Information-Technology',
-            'SAP-09-Institutional-Partnerships',
-            'SAP-09-01-ECHO',
-            'SAP-09-02-USAID',
-            'SAP-10-Equipment-Accounting-and-Management',
-            'Standard-Operational-Procedures',
+            'Current_SOPs,_SAPs_and_Security_Manual',
+            'Security Manual',
+            'Non-MapAction Security Advice',
+            'Standard Administrative Procedures',
+            'SAP 01: General-Policies',
+            'SAP 02: Human-Resources',
+            'SAP 03: Risk-Management',
+            'SAP 04: Financial-Management',
+            'SAP 05: Fundraising-and-Marketing',
+            'SAP 05: 01-External-Communications',
+            'SAP 06: Quality-Assurance',
+            'SAP 07: Stakeholder-Communications',
+            'SAP 08: Information-Technology',
+            'SAP 09: Institutional-Partnerships',
+            'SAP 09.01: ECHO',
+            'SAP 09.02: USAID',
+            'SAP 10: Equipment Accounting and Management',
+            'Standard Operational Procedures',
         ]
     }},
-    {'internal-training': {
+    {'mw-internal-training': {
         'labels': [
-            '2017-Team-Training',
-            '2016-Team-Training',
-            '2015-Team-Training',
-            '2014-Team-Training',
-            '2013-Team-Training',
-            '2012-Team-Training',
-            '2011-Team-Training',
-            'Team-Training-Diary',
-            'External-Training-Cost-Recoverable',
-            'Partner-Training',
+            '2017_Team_Training',
+            '2016_Team_Training',
+            '2015_Team_Training',
+            '2014_Team_Training',
+            '2013_Team_Training',
+            '2012_Team_Training',
+            '2011_Team_Training',
+            'Team_Training_Diary',
+            'External_Training_(Cost_Recoverable)',
+            'Partner_Training',
         ]
     }}
 ]
@@ -109,6 +109,37 @@ def format_space_name(label):
     return " ".join(map(str.capitalize, label.split('-')))
 
 
+def category_cleaner(category):
+    """Remove Confluence invalid characters from categories."""
+    VALID = '-'
+
+    invalid = [' ', ':', '(', ')', '_', ',']
+    for character in category:
+        if character in invalid:
+            category = category.replace(character, VALID)
+
+    return category
+
+
+def mwprefix(string):
+    """Make sure to prefix things with 'mw-'."""
+    return 'mw-' + string
+
+
+def get_static_spaces():
+    """Retrieve all space names from TOP_LEVEL_SPACES."""
+    return chain(*[k.keys() for k in TOP_LEVEL_SPACES])
+
+
+def get_static_labels():
+    """Retrieve all labels from TOP_LEVEL_SPACES."""
+    labels = []
+    space_keys = get_static_spaces()
+    for key, space_dict in zip(space_keys, TOP_LEVEL_SPACES):
+        labels.append(space_dict[key]['labels'])
+    return chain(*labels)
+
+
 @click.group()
 def main():
     """m2c: A bespoke MediaWiki to Confluence migration tool."""
@@ -120,7 +151,7 @@ def main():
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def static_spaces(undo, verbose):
     """Create top level spaces"""
-    space_keys = chain(*[k.keys() for k in TOP_LEVEL_SPACES])
+    space_keys = get_static_spaces()
 
     for space_key in space_keys:
         formatted_key = format_space_key(space_key)
@@ -143,14 +174,17 @@ def static_spaces(undo, verbose):
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def static_labels(undo, verbose):
     """Create labels on top level spaces"""
-    space_keys = chain(*[k.keys() for k in TOP_LEVEL_SPACES])
+    space_keys = get_static_spaces()
+
     for key, space_dict in zip(space_keys, TOP_LEVEL_SPACES):
         labels = space_dict[key]['labels']
 
         if not labels:
             continue
 
-        formatted_labels = ','.join(labels)
+        cleaned = map(category_cleaner, labels)
+        prefixed = map(mwprefix, cleaned)
+        formatted_labels = ','.join(prefixed)
         formatted_key = format_space_key(key)
 
         action = 'removeLabels' if undo else 'addLabels'
@@ -169,7 +203,10 @@ def static_labels(undo, verbose):
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def migrate_categories(undo, verbose):
     """Migrate MediaWiki categories."""
-    pass
+    # get all the static labels here
+    # get the list of all categories from the mw
+    # filter out the ones we have
+    # put the rest in the general-guidance space
 
 
 @main.command()
