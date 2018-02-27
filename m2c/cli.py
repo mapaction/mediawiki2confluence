@@ -212,7 +212,7 @@ def to_markdown(content):
     """User pandoc to get markdown from MediaWiki format."""
     return pypandoc.convert_text(
         content,
-        'markdown',
+        'markdown_strict',
         format='mediawiki'
     )
 
