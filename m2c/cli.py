@@ -304,9 +304,17 @@ def with_markdown(content, space):
 
 def parse_content(page, markdown, space):
     """Retrieve the content of the page."""
+    migrate_link = (
+        'Migrated from <a href="https://{}/index.php/{}">here</a>\n\n'.format(
+            MEDIAWIKI_URL, page.name.replace(' ', '_')
+        )
+    )
+
+    content = page.text()
     if markdown:
-        return with_markdown(page.text(), space)
-    return page.text()
+        content = with_markdown(page.text(), space)
+
+    return migrate_link + content
 
 
 def parse_labels(page):
