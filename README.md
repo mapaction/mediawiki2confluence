@@ -1,6 +1,6 @@
 # mediawiki2confluence
 
-[MediaWiki] migration scripts by [Aptivate] for MapAction.
+[MediaWiki] migration scripts by [Aptivate] for [MapAction].
 
 [MediaWiki]: https://www.mediawiki.org/wiki/MediaWiki
 [Aptivate]: http://www.aptivate.org
