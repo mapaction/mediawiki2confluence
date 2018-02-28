@@ -296,7 +296,7 @@ def with_markdown(content, space):
         )
 
         content = back_to_markdown(traversable_doc)
-    except TypeError:
+    except Exception:
         click.echo('Failed to parse into JSON! Continuing ...')
 
     return convert_image_format(content)
