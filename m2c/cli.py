@@ -549,7 +549,12 @@ def migrate_images(undo, debug, limit, verbose):
             space = parse_space(page)
             title = parse_title(page)
             name = parse_image_name(image)
-            location = download_image(image)
+
+            try:
+                location = download_image(image)
+            except Exception:
+                click.echo('Failed to download image! Continuing ...')
+                continue
 
             kwargs = dict(
                 space=space,
