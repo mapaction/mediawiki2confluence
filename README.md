@@ -24,7 +24,7 @@ You'll need a CLI tool from the Confluence. Follow the instructions at:
 
 Untar that file in the ignored `propietary` folder in this repository.
 
-Once installed, refer to the [action reference] for commands.
+For usage, refer to the [action reference] for commands.
 
 [action reference]: https://bobswift.atlassian.net/wiki/spaces/CSOAP/overview
 
@@ -48,6 +48,13 @@ Once you've ran the `pipenv` incantation, you can access the tool with:
 $ pipenv run m2c --help
 ```
 
+Or drop into a pipenv managed shell and run commands with:
+
+```
+$ pipenv shell
+$ m2c --help
+```
+
 # Run Things in Order
 
 First of all, create a image downloads directory with:
@@ -56,7 +63,7 @@ First of all, create a image downloads directory with:
 $ mkdir -p images
 ```
 
-Then, the migration, so far, is run in the following order:
+The migration is run manually in steps, so far:
 
 ```
 $ m2c static_spaces
@@ -86,12 +93,11 @@ We're organising on this [Trello] board:
 
   - Create the top level spaces (from the Excel sheet categories)
   - Label those spaces accordingly (from the Excel sheet categories)
-  - Migrate the rest of the categories into the general-guidance space
+  - Migrate the rest of the categories into labels of general-guidance space
   - Start the page migration:
     - Convert the mediawiki page content to JSON
     - Rewrite internal links and drop categories from page ending
-    - Convert from JSON to markdown and rewrite image links
-    - Add mediawiki migration back-link to the page
+    - Convert from JSON to markdown and construct confluence image links
     - Upload the page (auto-magic convert to confluence storage format from markdown)
   - Start the image migration
     - For each page, find all images
