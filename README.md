@@ -81,3 +81,18 @@ We're organising on this [Trello] board:
 [Trello]: https://trello.com
 
 > https://trello.com/b/KDErLd9q
+
+# The Algorithm
+
+  - Create the top level spaces (from the Excel sheet categories)
+  - Label those spaces accordingly (from the Excel sheet categories)
+  - Migrate the rest of the categories into the general-guidance space
+  - Start the page migration:
+    - Convert the mediawiki page content to JSON
+    - Rewrite internal links and drop categories from page ending
+    - Convert from JSON to markdown and rewrite image links
+    - Add mediawiki migration back-link to the page
+    - Upload the page (auto-magic convert to confluence storage format from markdown)
+  - Start the image migration
+    - For each page, find all images
+    - Upload the image attached to the page
