@@ -1,18 +1,21 @@
+import io
 from itertools import chain
 from os import environ
 from os.path import abspath, dirname
 from pprint import pprint
 from subprocess import CalledProcessError, check_output
 
-import click
-import requests
 from bs4 import BeautifulSoup
 
+import click
+import requests
+
 import mwclient
+import panflute
 import pypandoc
 
 
-CONFLUENCE_URL = 'https://wiki-test.mapaction.org/'
+CONFLUENCE_URL = 'https://wiki-test.mapaction.org'
 MEDIAWIKI_URL = 'mediawiki.mapaction.org'
 IMAGES_DIR = '{}/../images'.format(dirname(abspath(__file__)))
 
@@ -207,20 +210,41 @@ def parse_image_name(image):
     return image.name.replace('File:', '')
 
 
-def with_markdown(content):
-    """User pandoc to get markdown from MediaWiki format."""
-    converted = pypandoc.convert_text(
-        content,
-        'markdown_strict',
-        format='mediawiki'
+def drop_loose_categories(elem, doc):
+    """Drop all category links at the bottom of the page."""
+    if type(elem) == panflute.Link:
+        if elem.url.startswith('Category:'):
+            return []
+
+
+def rewrite_internal_links(elem, doc, space):
+    if type(elem) == panflute.Link:
+        if elem.title == 'wikilink':
+            elem.url = '{base}/display/{space}/{page}'.format(
+                base=CONFLUENCE_URL,
+                space=space,
+                page=elem.url.replace('_', '+')
+            )
+
+
+def back_to_content(document):
+    with io.StringIO() as f:
+        panflute.dump(document, f)
+        return f.getvalue()
+
+
+def back_to_markdown(document):
+    """Convert a Panflute JSON document back to markdown."""
+    return pypandoc.convert_text(
+        back_to_content(document),
+        'markdown_mmd',
+        format='json',
     )
-    dropped = drop_page_categories(converted)
-    return convert_image_format(dropped)
 
 
-def convert_image_format(html):
+def convert_image_format(markdown):
     """Make images appear in confluence format."""
-    separated = html.split('\n')
+    separated = markdown.split('\n')
     for index, line in enumerate(separated):
         if '<img' in line:
             soup = BeautifulSoup(line, 'html.parser')
@@ -251,17 +275,37 @@ def convert_image_format(html):
     return '\n'.join(separated)
 
 
-def drop_page_categories(html):
-    """Remove categories listing from content source."""
-    separated = html.split('\n')
-    filtered = filter(lambda l: not l.startswith('<Category'), separated)
-    return '\n'.join(filtered)
+def with_markdown(content, space):
+    """User pandoc to get markdown from MediaWiki format."""
+    try:
+        json_converted = pypandoc.convert_text(
+            content,
+            'json',
+            format='mediawiki'
+        )
+
+        stream = io.StringIO(json_converted)
+        traversable_doc = panflute.load(stream)
+
+        panflute.run_filter(drop_loose_categories, doc=traversable_doc)
+
+        panflute.run_filter(
+            rewrite_internal_links,
+            doc=traversable_doc,
+            space=space
+        )
+
+        content = back_to_markdown(traversable_doc)
+    except TypeError:
+        click.echo('Failed to parse into JSON! Continuing ...')
+
+    return convert_image_format(content)
 
 
-def parse_content(page, markdown):
+def parse_content(page, markdown, space):
     """Retrieve the content of the page."""
     if markdown:
-        return with_markdown(page.text())
+        return with_markdown(page.text(), space)
     return page.text()
 
 
@@ -399,7 +443,7 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
 
         space = parse_space(page)
         title = parse_title(page)
-        content = parse_content(page, markdown=markdown)
+        content = parse_content(page, markdown=markdown, space=space)
         labels = parse_labels(page)
 
         kwargs = dict(
@@ -425,6 +469,54 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
             debug=debug,
         )
         click.echo(output)
+
+
+@main.command()
+@click.argument('page-title')
+@click.option('--undo', is_flag=True, help='Undo creation of the pages')
+@click.option('--verbose', is_flag=True, help='The computer will speak to you')
+@click.option('--markdown', is_flag=True, help='Migrate with markdown')
+@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+def migrate_page(page_title, undo, verbose, markdown, debug):
+    """Migrate a single from MediaWiki."""
+    mwclient = get_mw_client()
+
+    try:
+        page = [p for p in mwclient.allpages() if p.name == page_title][0]
+    except IndexError:
+        click.echo('Could not find that page. Sorry.')
+        raise click.Abort()
+
+    action, args, kwargs = 'addPage', [], {}
+
+    space = parse_space(page)
+    title = parse_title(page)
+    content = parse_content(page, markdown=markdown, space=space)
+    labels = parse_labels(page)
+
+    kwargs = dict(
+        space=space,
+        title=title,
+        content=content,
+        labels=labels
+    )
+
+    if markdown:
+        args = ['markdown']
+
+    if undo:
+        action, kwargs = 'removePage', dict(space=space, title=title)
+
+    label_cmd = get_action_cmd(action, *args, **kwargs)
+    base = get_confluence_cmd()
+    command = base + label_cmd
+
+    output = run_confluence_cmd(
+        command,
+        verbose=verbose,
+        debug=debug,
+    )
+    click.echo(output)
 
 
 @main.command()
