@@ -377,11 +377,18 @@ def parse_content(page, markdown, space):
         )
     )
 
+    # Robbed from https://confluence.atlassian.com/doc/table-of-contents-macro-182682099.html
+    toc_markup = ((
+        '<p><ac:structured-macro ac:name="toc" ac:schema-version="1" '
+        'ac:macro-id="a4c703fc-b0db-4716-bc78-8682460e8220"/></p>'
+        '\n'
+    ))
+
     content = page.text()
     if markdown:
         content = with_markdown(page.text(), space, page.name)
 
-    return migrate_link + content
+    return toc_markup + migrate_link + content
 
 
 def parse_labels(page, extra_labels=None):
