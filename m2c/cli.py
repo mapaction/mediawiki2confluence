@@ -159,6 +159,11 @@ def category_cleaner(category):
     return category
 
 
+def parse_category_page_title(page):
+    """Rip out category prefixes for category pages."""
+    return page.name.replace('Category:', '')
+
+
 def clean_mw_categories(categories):
     """Clean up parsed MediaWiki categories."""
     formatted = map(lambda cat: cat.replace('Category:', ''), categories)
@@ -317,11 +322,14 @@ def parse_content(page, markdown, space):
     return migrate_link + content
 
 
-def parse_labels(page):
+def parse_labels(page, extra_labels=None):
     """Parse labels for the page."""
-    return ",".join(clean_mw_categories(
-        [cat.name for cat in page.categories()]
-    ))
+    parsed = clean_mw_categories([cat.name for cat in page.categories()])
+
+    if extra_labels is not None:
+        parsed += extra_labels
+
+    return ",".join(parsed)
 
 
 def download_image(image):
@@ -579,3 +587,55 @@ def migrate_images(undo, debug, limit, verbose):
                 debug=debug,
             )
             click.echo(output)
+
+
+@main.command()
+@click.option('--undo', is_flag=True, help='Undo creation of the pages')
+@click.option('--verbose', is_flag=True, help='The computer will speak to you')
+@click.option('--limit', default=None, help='Limit the number of pages')
+@click.option('--markdown', is_flag=True, help='Migrate with markdown')
+@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+def migrate_category_pages(undo, verbose, limit, markdown, debug):
+    """Migrates category pages from MediaWiki."""
+    NAMESPACE = 14
+
+    mwclient = get_mw_client()
+
+    if limit is not None:
+        pages = [
+            p for p in mwclient.allpages(namespace=NAMESPACE)
+        ][:int(limit)]
+    else:
+        pages = [p for p in mwclient.allpages(namespace=NAMESPACE)]
+
+    for page in pages:
+        action, args, kwargs = 'addPage', [], {}
+
+        space = parse_space(page)
+        title = parse_category_page_title(page)
+        content = parse_content(page, markdown=markdown, space=space)
+        labels = parse_labels(page, extra_labels=['FIXME-was-a-category-page'])
+
+        kwargs = dict(
+            space=space,
+            title=title,
+            content=content,
+            labels=labels
+        )
+
+        if markdown:
+            args = ['markdown']
+
+        if undo:
+            action, kwargs = 'removePage', dict(space=space, title=title)
+
+        label_cmd = get_action_cmd(action, *args, **kwargs)
+        base = get_confluence_cmd()
+        command = base + label_cmd
+
+        output = run_confluence_cmd(
+            command,
+            verbose=verbose,
+            debug=debug,
+        )
+        click.echo(output)
