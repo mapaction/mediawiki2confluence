@@ -412,7 +412,10 @@ def parse_labels(page, extra_labels=[]):
     if extra_labels is not []:
         parsed += extra_labels
 
-    return ",".join(chain(*parsed))
+    if not all(map(lambda x: isinstance(x, str), parsed)):
+        return ','.join(chain(*parsed))
+
+    return ','.join(parsed)
 
 
 def download_image(image):
@@ -529,9 +532,9 @@ def migrate_categories(undo, verbose, debug):
 def migrate_pages(undo, verbose, limit, markdown, debug):
     """Migrates pages from MediaWiki."""
     if limit is not None:
-        pages = [p for p in main_pages][:int(limit)]
+        pages = main_pages[:int(limit)]
     else:
-        pages = [p for p in main_pages]
+        pages = main_pages
 
     for page in pages:
         action, args, kwargs = 'addPage', [], {}
@@ -543,9 +546,9 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
 
         extra_labels = []
         if "{{:" in content:
-            extra_labels.append(['FIXME-transclusion-markup-unhandled'])
+            extra_labels.append(['fixme-transclusion-markup-unhandled'])
         if 'REDIRECT' in content:
-            extra_labels.append(['FIXME-redirect-page'])
+            extra_labels.append(['fixme-redirect-page'])
         labels = parse_labels(page, extra_labels=extra_labels)
 
         kwargs = dict(
@@ -595,9 +598,9 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
 
     extra_labels = []
     if '{{:' in content:
-        extra_labels.append(['FIXME-transclusion-markup-unhandled'])
+        extra_labels.append(['fixme-transclusion-markup-unhandled'])
     if 'REDIRECT' in content:
-        extra_labels.append(['FIXME-redirect-page'])
+        extra_labels.append(['fixme-redirect-page'])
     labels = parse_labels(page, extra_labels=extra_labels)
 
     kwargs = dict(
@@ -632,11 +635,10 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def migrate_images(undo, debug, limit, verbose):
     """Migrates images from MediaWiki."""
-    # FIXME: Should we also do this with category pages!?
     if limit is not None:
-        pages = [p for p in main_pages][:int(limit)]
+        pages = all_pages[:int(limit)]
     else:
-        pages = [p for p in main_pages]
+        pages = all_pages
 
     for page in pages:
         images = [img for img in page.images()]
@@ -646,6 +648,9 @@ def migrate_images(undo, debug, limit, verbose):
             space = parse_space(page)
             title = parse_title(page)
             name = parse_image_name(image)
+
+            if 'Category:' in title:
+                title = title.split('Category:')[-1]
 
             try:
                 location = download_image(image)
@@ -690,9 +695,9 @@ def migrate_images(undo, debug, limit, verbose):
 def migrate_category_pages(undo, verbose, limit, markdown, debug):
     """Migrates category pages from MediaWiki."""
     if limit is not None:
-        pages = [p for p in cat_pages][:int(limit)]
+        pages = cat_pages[:int(limit)]
     else:
-        pages = [p for p in cat_pages]
+        pages = cat_pages
 
     for page in pages:
         action, args, kwargs = 'addPage', [], {}
