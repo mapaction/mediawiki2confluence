@@ -371,13 +371,27 @@ def with_markdown(content, space, name):
 
 def parse_content(page, markdown, space):
     """Retrieve the content of the page."""
-    migrate_link = (
-        'Migrated from <a href="https://{}/index.php/{}">here</a>\n\n'.format(
-            MEDIAWIKI_URL, page.name.replace(' ', '_')
-        )
+    link = '<a href="https://{base}/index.php/{link}">{name}</a>'.format(
+        base=MEDIAWIKI_URL,
+        link=page.name.replace(' ', '_'),
+        name=page.name
     )
 
-    # Robbed from https://confluence.atlassian.com/doc/table-of-contents-macro-182682099.html
+    migrated_notice = ((
+        '<p><ac:structured-macro ac:name="note" ac:schema-version="1" '
+        'ac:macro-id="63359400-3dc8-43af-897b-d82aa4529401"> '
+        '<ac:parameter ac:name="title">{title}</ac:parameter> '
+        '<ac:rich-text-body><p>{notice}</p></ac:rich-text-body>'
+        '</ac:structured-macro></p>'
+    ).format(
+        title='MediaWiki Migration Notice',
+        notice=(
+            'Please note, this page has been '
+            'automatically migrated from the '
+            'MediaWiki page: {link}.'.format(link=link)
+        )
+    ))
+
     toc_markup = ((
         '<p><ac:structured-macro ac:name="toc" ac:schema-version="1" '
         'ac:macro-id="a4c703fc-b0db-4716-bc78-8682460e8220"/></p>'
@@ -388,7 +402,7 @@ def parse_content(page, markdown, space):
     if markdown:
         content = with_markdown(page.text(), space, page.name)
 
-    return toc_markup + migrate_link + content
+    return toc_markup + content + migrated_notice
 
 
 def parse_labels(page, extra_labels=None):
