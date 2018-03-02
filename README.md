@@ -70,6 +70,7 @@ $ m2c static_spaces
 $ m2c static_labels
 $ m2c migrate_categories
 $ m2c migrate_pages --markdown
+$ m2c migrate_category_pages --markdown
 $ m2c migrate_images
 ```
 
