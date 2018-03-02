@@ -89,3 +89,9 @@ We're organising on this [Trello] board:
 [Trello]: https://trello.com
 
 > https://trello.com/b/KDErLd9q
+
+# Labels
+
+  * `fixme-transclusion-markup-unhandled`
+  * `fixme-was-a-category-page`
+  * `fixme-redirect-page`

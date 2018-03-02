@@ -405,14 +405,14 @@ def parse_content(page, markdown, space):
     return toc_markup + content + migrated_notice
 
 
-def parse_labels(page, extra_labels=None):
+def parse_labels(page, extra_labels=[]):
     """Parse labels for the page."""
     parsed = clean_mw_categories([cat.name for cat in page.categories()])
 
-    if extra_labels is not None:
+    if extra_labels is not []:
         parsed += extra_labels
 
-    return ",".join(parsed)
+    return ",".join(chain(*parsed))
 
 
 def download_image(image):
@@ -541,6 +541,13 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
         content = parse_content(page, markdown=markdown, space=space)
         labels = parse_labels(page)
 
+        extra_labels = []
+        if "{{:" in content:
+            extra_labels.append(['FIXME-transclusion-markup-unhandled'])
+        if 'REDIRECT' in content:
+            extra_labels.append(['FIXME-redirect-page'])
+        labels = parse_labels(page, extra_labels=extra_labels)
+
         kwargs = dict(
             space=space,
             title=title,
@@ -586,9 +593,11 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
     title = parse_title(page)
     content = parse_content(page, markdown=markdown, space=space)
 
-    extra_labels = None
-    if "{{:" in content:
-        extra_labels = ['FIXME-transclusion-markup-unhandled']
+    extra_labels = []
+    if '{{:' in content:
+        extra_labels.append(['FIXME-transclusion-markup-unhandled'])
+    if 'REDIRECT' in content:
+        extra_labels.append(['FIXME-redirect-page'])
     labels = parse_labels(page, extra_labels=extra_labels)
 
     kwargs = dict(
@@ -691,7 +700,13 @@ def migrate_category_pages(undo, verbose, limit, markdown, debug):
         space = parse_space(page)
         title = parse_category_page_title(page)
         content = parse_content(page, markdown=markdown, space=space)
-        labels = parse_labels(page, extra_labels=['FIXME-was-a-category-page'])
+
+        extra_labels = ['FIXME-was-a-category-page']
+        if '{{:' in content:
+            extra_labels.append(['FIXME-transclusion-markup-unhandled'])
+        if 'REDIRECT' in content:
+            extra_labels.append(['FIXME-redirect-page'])
+        labels = parse_labels(page, extra_labels=extra_labels)
 
         kwargs = dict(
             space=space,
