@@ -250,14 +250,43 @@ def space_from_page_name(name):
         click.echo('Continuing ...')
 
 
+def handle_anchor_link(name):
+    """Will format internal anchor link if present."""
+    if '#' not in name:
+        return
+
+    try:
+        front, back = name.split('#')
+
+        front_formatted = front.replace('_', '')
+        back_formatted = back.replace('_', '')
+
+        return '{}#{}-{}'.format(
+            front.replace('_', '+'),
+            front_formatted,
+            back_formatted,
+        )
+    except Exception:
+        click.echo('Failed to format anchor link for {}'.format(name))
+        with open(FAILURE_LOG, 'a') as handle:
+            handle.write('Failed to format anchor link {}\n'.format(name))
+        click.echo('Continuing ...')
+
+
 def rewrite_internal_links(elem, doc):
     if type(elem) == panflute.Link:
         if elem.title == 'wikilink':
             space = space_from_page_name(elem.url)
+
+            page = elem.url.replace('_', '+')
+            anchor = handle_anchor_link(elem.url)
+            if anchor is not None:
+                page = anchor
+
             elem.url = '{base}/display/{space}/{page}'.format(
                 base=CONFLUENCE_URL,
                 space=space,
-                page=elem.url.replace('_', '+')
+                page=page
             )
 
 
