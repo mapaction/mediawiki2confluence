@@ -535,7 +535,11 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
     space = parse_space(page)
     title = parse_title(page)
     content = parse_content(page, markdown=markdown, space=space)
-    labels = parse_labels(page)
+
+    extra_labels = None
+    if "{{:" in content:
+        extra_labels = ['FIXME-transclusion-markup-unhandled']
+    labels = parse_labels(page, extra_labels=extra_labels)
 
     kwargs = dict(
         space=space,
