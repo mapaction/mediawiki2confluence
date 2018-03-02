@@ -14,10 +14,35 @@ import mwclient
 import panflute
 import pypandoc
 
+FAILURE_LOG = 'failure.log'
+
 
 CONFLUENCE_URL = 'https://wiki-test.mapaction.org'
 MEDIAWIKI_URL = 'mediawiki.mapaction.org'
 IMAGES_DIR = '{}/../images'.format(dirname(abspath(__file__)))
+
+CATEGORY_NAMESPACE = 14
+
+
+def get_mw_client():
+    """Build MediaWiki client connection."""
+    try:
+        username = environ['MEDIAWIKI_USERNAME']
+        password = environ['MEDIAWIKI_PASSWORD']
+    except KeyError as error:
+        click.fail('Unable to retrieve {}'.format(str(error)))
+
+    client = mwclient.Site(MEDIAWIKI_URL, path='/')
+    client.login(username, password)
+
+    return client
+
+
+mwsite = get_mw_client()
+
+main_pages = [p for p in mwsite.allpages()]
+cat_pages = [p for p in mwsite.allpages(namespace=CATEGORY_NAMESPACE)]
+all_pages = main_pages + cat_pages
 
 
 # Please note, this was generated based on the comments in
@@ -120,6 +145,8 @@ def run_confluence_cmd(command, verbose=False, debug=False):
         return check_output(command)
     except (CalledProcessError, ValueError) as err:
         click.echo('Failed to run command, saw: {}'.format(str(err)))
+        with open(FAILURE_LOG, 'a') as handle:
+            handle.write('Hard failure! Saw: {}\n'.format(str(err)))
         click.echo('Continuing ...')
 
 
@@ -131,20 +158,6 @@ def format_space_key(label):
 def format_space_name(label):
     """Get the space label in the right format."""
     return ' '.join(map(str.capitalize, label.split('-')))
-
-
-def get_mw_client():
-    """Build MediaWiki client connection."""
-    try:
-        username = environ['MEDIAWIKI_USERNAME']
-        password = environ['MEDIAWIKI_PASSWORD']
-    except KeyError as error:
-        click.fail('Unable to retrieve {}'.format(str(error)))
-
-    client = mwclient.Site(MEDIAWIKI_URL, path='/')
-    client.login(username, password)
-
-    return client
 
 
 def category_cleaner(category):
@@ -222,9 +235,25 @@ def drop_loose_categories(elem, doc):
             return []
 
 
-def rewrite_internal_links(elem, doc, space):
+def space_from_page_name(name):
+    """Determine space name from a page URL."""
+    ANCHOR_MARKER = '#'
+
+    try:
+        cleaned = name.split(ANCHOR_MARKER)[0].replace('_', ' ')
+        page = [p for p in all_pages if cleaned in p.name][0]
+        return parse_space(page)
+    except IndexError:
+        click.echo('Failed to determine internal link for {}'.format(name))
+        with open(FAILURE_LOG, 'a') as handle:
+            handle.write('Failed to re-write internal link {}\n'.format(name))
+        click.echo('Continuing ...')
+
+
+def rewrite_internal_links(elem, doc):
     if type(elem) == panflute.Link:
         if elem.title == 'wikilink':
+            space = space_from_page_name(elem.url)
             elem.url = '{base}/display/{space}/{page}'.format(
                 base=CONFLUENCE_URL,
                 space=space,
@@ -280,7 +309,7 @@ def convert_image_format(markdown):
     return '\n'.join(separated)
 
 
-def with_markdown(content, space):
+def with_markdown(content, space, name):
     """User pandoc to get markdown from MediaWiki format."""
     try:
         json_converted = pypandoc.convert_text(
@@ -296,13 +325,17 @@ def with_markdown(content, space):
 
         panflute.run_filter(
             rewrite_internal_links,
-            doc=traversable_doc,
-            space=space
+            doc=traversable_doc
         )
 
         content = back_to_markdown(traversable_doc)
     except Exception:
         click.echo('Failed to parse into JSON! Continuing ...')
+        with open(FAILURE_LOG, 'a') as handle:
+            handle.write((
+                'Failed to re-write links and '
+                'drop categories for page {}\n'.format(name)
+            ))
 
     return convert_image_format(content)
 
@@ -317,7 +350,7 @@ def parse_content(page, markdown, space):
 
     content = page.text()
     if markdown:
-        content = with_markdown(page.text(), space)
+        content = with_markdown(page.text(), space, page.name)
 
     return migrate_link + content
 
@@ -415,12 +448,10 @@ def migrate_categories(undo, verbose, debug):
     """Migrate MediaWiki categories."""
     AGREED_SPACE = 'general-guidance'
 
-    mwclient = get_mw_client()
-
     labels = [label for label in get_static_labels()]
     cleaned_labels = list(map(category_cleaner, labels))
     categories = clean_mw_categories([
-        cat.name for cat in mwclient.allcategories()
+        cat.name for cat in mwsite.allcategories()
     ])
     remaining = set(categories).difference(set(cleaned_labels))
     formatted_remaining = ",".join(map(mwprefix, remaining))
@@ -447,12 +478,10 @@ def migrate_categories(undo, verbose, debug):
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
 def migrate_pages(undo, verbose, limit, markdown, debug):
     """Migrates pages from MediaWiki."""
-    mwclient = get_mw_client()
-
     if limit is not None:
-        pages = [p for p in mwclient.allpages()][:int(limit)]
+        pages = [p for p in main_pages][:int(limit)]
     else:
-        pages = [p for p in mwclient.allpages()]
+        pages = [p for p in main_pages]
 
     for page in pages:
         action, args, kwargs = 'addPage', [], {}
@@ -495,10 +524,8 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
 def migrate_page(page_title, undo, verbose, markdown, debug):
     """Migrate a single from MediaWiki."""
-    mwclient = get_mw_client()
-
     try:
-        page = [p for p in mwclient.allpages() if p.name == page_title][0]
+        page = [p for p in all_pages if page_title in p.name][0]
     except IndexError:
         click.echo('Could not find that page. Sorry.')
         raise click.Abort()
@@ -542,12 +569,11 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def migrate_images(undo, debug, limit, verbose):
     """Migrates images from MediaWiki."""
-    mwclient = get_mw_client()
-
+    # FIXME: Should we also do this with category pages!?
     if limit is not None:
-        pages = [p for p in mwclient.allpages()][:int(limit)]
+        pages = [p for p in main_pages][:int(limit)]
     else:
-        pages = [p for p in mwclient.allpages()]
+        pages = [p for p in main_pages]
 
     for page in pages:
         images = [img for img in page.images()]
@@ -562,6 +588,9 @@ def migrate_images(undo, debug, limit, verbose):
                 location = download_image(image)
             except Exception:
                 click.echo('Failed to download image! Continuing ...')
+                with open(FAILURE_LOG, 'a') as handle:
+                    msg = 'Failed to download image: {} for page {}\n'
+                    handle.write(msg.format(name, page.name))
                 continue
 
             kwargs = dict(
@@ -597,16 +626,10 @@ def migrate_images(undo, debug, limit, verbose):
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
 def migrate_category_pages(undo, verbose, limit, markdown, debug):
     """Migrates category pages from MediaWiki."""
-    NAMESPACE = 14
-
-    mwclient = get_mw_client()
-
     if limit is not None:
-        pages = [
-            p for p in mwclient.allpages(namespace=NAMESPACE)
-        ][:int(limit)]
+        pages = [p for p in cat_pages][:int(limit)]
     else:
-        pages = [p for p in mwclient.allpages(namespace=NAMESPACE)]
+        pages = [p for p in cat_pages]
 
     for page in pages:
         action, args, kwargs = 'addPage', [], {}
