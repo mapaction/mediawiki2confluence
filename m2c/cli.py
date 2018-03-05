@@ -279,6 +279,10 @@ def rewrite_internal_links(elem, doc):
             space = space_from_page_name(elem.url)
 
             page = elem.url.replace('_', '+')
+
+            if 'Category:' in page:
+                page = page.replace('Category:', '')
+
             anchor = handle_anchor_link(elem.url)
             if anchor is not None:
                 page = anchor
