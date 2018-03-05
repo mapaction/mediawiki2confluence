@@ -252,10 +252,11 @@ def space_from_page_name(name):
         page = [p for p in all_pages if cleaned in p.name][0]
         return parse_space(page)
     except IndexError:
-        click.echo('Failed to determine internal link for {}'.format(name))
+        click.echo('Failed to determine space for {}'.format(name))
         with open(FAILURE_LOG, 'a') as handle:
-            handle.write('Failed to re-write internal link {}\n'.format(name))
+            handle.write('Failed to determine space for {}\n'.format(name))
         click.echo('Continuing ...')
+        return 'UNDEFINED'
 
 
 def handle_anchor_link(name):
