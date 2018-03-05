@@ -261,6 +261,10 @@ def space_from_page_name(name):
 
     try:
         cleaned = name.split(ANCHOR_MARKER)[0].replace('_', ' ')
+
+        if 'Category: ' in cleaned:
+            cleaned = cleaned.replace('Category: ', 'Category:')
+
         page = [
             p for p in all_pages
             if cleaned.lower() in
