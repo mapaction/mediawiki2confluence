@@ -23,3 +23,7 @@ test:
 
 proof: lint sort test
 .PHONY: proof
+
+release:
+	@$(PIPENVRUN) python setup.py sdist upload -r pypi
+.PHONY: release

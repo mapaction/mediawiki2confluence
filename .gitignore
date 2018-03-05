@@ -5,3 +5,4 @@
 testfiles/
 images/
 failure.log
+dist/
