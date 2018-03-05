@@ -447,7 +447,7 @@ def parse_labels(page, extra_labels=[]):
     if extra_labels is not []:
         parsed += extra_labels
 
-    if not all(map(lambda x: isinstance(x, str), parsed)):
+    if all(map(lambda x: isinstance(x, list), parsed)):
         return ','.join(chain(*parsed))
 
     return ','.join(parsed)
@@ -467,7 +467,7 @@ def download_image(image):
 def handle_duplicate_page(args, kwargs, extra_labels, page,
                           title, action, base, verbose, debug):
     """Label and rename for duplicate pages as agreed."""
-    extra_labels += [['fixme-duplicate-page-conflict']]
+    extra_labels.append('fixme-duplicate-page-conflict')
     labels = parse_labels(page, extra_labels=extra_labels)
     kwargs['labels'] = labels
 
@@ -600,7 +600,7 @@ def pages(undo, verbose, limit, debug):
 
         extra_labels = []
         if "{{:" in content:
-            extra_labels.append(['fixme-transclusion-markup-unhandled'])
+            extra_labels.append('fixme-transclusion-markup-unhandled')
         labels = parse_labels(page, extra_labels=extra_labels)
 
         kwargs = dict(
@@ -657,7 +657,7 @@ def page(page_title, undo, verbose, debug):
 
     extra_labels = []
     if '{{:' in content:
-        extra_labels.append(['fixme-transclusion-markup-unhandled'])
+        extra_labels.append('fixme-transclusion-markup-unhandled')
     labels = parse_labels(page, extra_labels=extra_labels)
 
     kwargs = dict(
@@ -774,9 +774,14 @@ def category_pages(undo, verbose, limit, debug):
 
         extra_labels = ['fixme-was-a-category-page', category_cleaner(title)]
         if '{{:' in content:
-            extra_labels.append(['fixme-transclusion-markup-unhandled'])
+            extra_labels.append('fixme-transclusion-markup-unhandled')
+
         if 'REDIRECT' in content:
-            extra_labels.append(['fixme-redirect-page'])
+            click.echo('Dropping redirect page. Continuing ...')
+            with open(FAILURE_LOG, 'a') as handle:
+                handle.write('Dropping redirect page {}\n'.format(title))
+            continue
+
         labels = parse_labels(page, extra_labels=extra_labels)
 
         kwargs = dict(
