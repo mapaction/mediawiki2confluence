@@ -378,10 +378,10 @@ def with_markdown(content, space, name):
 
         content = back_to_markdown(traversable_doc)
     except Exception:
-        click.echo('Failed to parse into JSON! Continuing ...')
+        click.echo('Failed to parse content! Continuing ...')
         with open(FAILURE_LOG, 'a') as handle:
             handle.write((
-                'Failed to parse content. Could not re-write links'
+                'Failed to parse content. Could not re-write links '
                 'and drop categories for page {}\n'.format(name)
             ))
 
