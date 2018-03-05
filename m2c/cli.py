@@ -161,7 +161,7 @@ def run_confluence_cmd(command, verbose=False, debug=False):
         click.echo('Failed to run command, saw: {}'.format(str(err)))
         with open(FAILURE_LOG, 'a') as handle:
             handle.write('Hard failure! Saw: {}\n'.format(str(err)))
-        click.echo('Continuing ...')
+        click.echo('Continuing ...\n')
 
 
 def format_space_key(label):
@@ -289,7 +289,8 @@ def handle_anchor_link(name):
         click.echo('Failed to format anchor link for {}'.format(name))
         with open(FAILURE_LOG, 'a') as handle:
             handle.write('Failed to format anchor link {}\n'.format(name))
-        click.echo('Continuing ...')
+        click.echo('Continuing ...\n')
+
         return name
 
 
@@ -384,7 +385,7 @@ def with_markdown(content, space, name):
 
         content = back_to_markdown(traversable_doc)
     except Exception:
-        click.echo('Failed to parse content! Continuing ...')
+        click.echo('Failed to parse content! Continuing ...\n')
         with open(FAILURE_LOG, 'a') as handle:
             handle.write((
                 'Failed to parse content. Could not re-write links '
@@ -602,7 +603,8 @@ def pages(undo, verbose, limit, debug):
         labels = parse_labels(page)
 
         if 'REDIRECT' in content:
-            click.echo('Dropping redirect page. Continuing ...')
+            click.echo(('Dropping redirect page {}. '
+                       'Continuing ...\n'.format(title)))
             with open(FAILURE_LOG, 'a') as handle:
                 handle.write('Dropping redirect page {}\n'.format(title))
             continue
@@ -659,7 +661,7 @@ def page(page_title, undo, verbose, debug):
     content = parse_content(page, space=space)
 
     if 'REDIRECT' in content:
-        click.echo('Dropping redirect page. Continuing ...')
+        click.echo('Dropping redirect page. Continuing ...\n')
         with open(FAILURE_LOG, 'a') as handle:
             handle.write('Dropping redirect page {}\n'.format(title))
         return
@@ -726,7 +728,7 @@ def images(undo, debug, limit, verbose):
             try:
                 location = download_image(image)
             except Exception:
-                click.echo('Failed to download image! Continuing ...')
+                click.echo('Failed to download image! Continuing ...\n')
                 with open(FAILURE_LOG, 'a') as handle:
                     msg = 'Failed to download image: {} for page {}\n'
                     handle.write(msg.format(name, page.name))
@@ -786,7 +788,7 @@ def category_pages(undo, verbose, limit, debug):
             extra_labels.append('fixme-transclusion-markup-unhandled')
 
         if 'REDIRECT' in content:
-            click.echo('Dropping redirect page. Continuing ...')
+            click.echo('Dropping redirect page. Continuing ...\n')
             with open(FAILURE_LOG, 'a') as handle:
                 handle.write('Dropping redirect page {}\n'.format(title))
             continue
