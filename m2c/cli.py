@@ -254,6 +254,7 @@ def drop_loose_categories(elem, doc):
 def space_from_page_name(name):
     """Determine space name from a page URL."""
     ANCHOR_MARKER = '#'
+    DEFAULT_SPACE = 'generalguidance'
 
     try:
         cleaned = name.split(ANCHOR_MARKER)[0].replace('_', ' ')
@@ -266,9 +267,14 @@ def space_from_page_name(name):
     except IndexError:
         click.echo('Failed to determine space for {}'.format(name))
         with open(FAILURE_LOG, 'a') as handle:
-            handle.write('Failed to determine space for {}\n'.format(name))
-        click.echo('Continuing ...')
-        return 'UNDEFINED'
+            handle.write((
+                'Failed to determine space for {}. '
+                'Using default of {}.\n'.format(
+                    name, DEFAULT_SPACE)
+            ))
+        click.echo('Continuing ...\n')
+
+        return DEFAULT_SPACE
 
 
 def handle_anchor_link(name):
