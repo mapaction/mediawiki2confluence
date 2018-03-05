@@ -577,7 +577,7 @@ def categories(undo, verbose, debug):
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--limit', default=None, help='Limit the number of pages')
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-def migrate_pages(undo, verbose, limit, debug):
+def pages(undo, verbose, limit, debug):
     """Migrates pages from MediaWiki."""
     if limit is not None:
         pages = main_pages[:int(limit)]
