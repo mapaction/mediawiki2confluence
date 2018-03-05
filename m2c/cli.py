@@ -280,6 +280,7 @@ def handle_anchor_link(name):
         with open(FAILURE_LOG, 'a') as handle:
             handle.write('Failed to format anchor link {}\n'.format(name))
         click.echo('Continuing ...')
+        return name
 
 
 def rewrite_internal_links(elem, doc):
