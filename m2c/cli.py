@@ -407,7 +407,20 @@ def build_migration_notice(page):
     ))
 
 
-def parse_content(page, markdown, space):
+def build_label_macro(label):
+    """Build the label macro for category pages."""
+    return (
+        '<p><ac:structured-macro ac:name="contentbylabel" '
+        'ac:schema-version="3" '
+        'ac:macro-id="814171db-5a6b-47e9-a6f7-8361d070a401"> '
+        '<ac:parameter ac:name="cql">'
+        'label = "{}"</ac:parameter>'
+        '</ac:structured-macro></p>'
+    ).format(label)
+
+
+def parse_content(page, markdown, space,
+                  category_page=False, title=None):
     """Retrieve the content of the page."""
     migration_notice = build_migration_notice(page)
 
@@ -420,6 +433,10 @@ def parse_content(page, markdown, space):
     content = page.text()
     if markdown:
         content = with_markdown(page.text(), space, page.name)
+
+    if category_page and title is not None:
+        label_macro = build_label_macro(category_cleaner(title))
+        return toc_markup + content + label_macro + migration_notice
 
     return toc_markup + content + migration_notice
 
@@ -752,7 +769,13 @@ def migrate_category_pages(undo, verbose, limit, markdown, debug):
 
         space = parse_space(page)
         title = parse_category_page_title(page)
-        content = parse_content(page, markdown=markdown, space=space)
+        content = parse_content(
+            page,
+            markdown=markdown,
+            space=space,
+            category_page=True,
+            title=title,
+        )
 
         extra_labels = ['fixme-was-a-category-page', category_cleaner(title)]
         if '{{:' in content:
