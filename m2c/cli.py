@@ -721,8 +721,8 @@ def page(page_title, undo, verbose, debug):
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def images(undo, debug, limit, verbose):
     """Migrates images from MediaWiki."""
-    if not os.path.exists('images'):
-        os.makedirs('images')
+    if not os.path.exists(IMAGES_DIR):
+        os.makedirs(IMAGES_DIR)
 
     if limit is not None:
         pages = all_pages[:int(limit)]
