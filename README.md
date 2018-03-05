@@ -34,11 +34,11 @@ The `m2c` tool expects a number of values exposed in your environment.
 Here's an example of what that might look like:
 
 ```
-CONFLUENCE_COMMAND_PATH="${PWD}/propietary/atlassian-cli-7.6.0/confluence" # for example
-HTTP_BASIC_AUTH_USERNAME="stallman"
-HTTP_BASIC_AUTH_PASSWORD="freesoftwarefreesociety"
-MEDIAWIKI_USERNAME='stallman'
-MEDIAWIKI_PASSWORD='ilikeparrots'
+CONFLUENCE_COMMAND_PATH="${PWD}/propietary/atlassian-cli-7.6.0/confluence"
+CONFLUENCE_USERNAME="stallman"
+CONFLUENCE_PASSWORD="freesoftwarefreesociety"
+MEDIAWIKI_USERNAME="stallman"
+MEDIAWIKI_PASSWORD="ilikeparrots"
 ```
 
 ## Running The Migration

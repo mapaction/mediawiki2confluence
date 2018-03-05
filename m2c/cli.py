@@ -98,8 +98,8 @@ TOP_LEVEL_SPACES = [
 def get_credentials():
     """Assemble the HTTP Basic Auth credentials from the environment."""
     try:
-        username = environ['HTTP_BASIC_AUTH_USERNAME']
-        password = environ['HTTP_BASIC_AUTH_PASSWORD']
+        username = environ['CONFLUENCE_USERNAME']
+        password = environ['CONFLUENCE_PASSWORD']
     except KeyError as error:
         click.fail('Unable to retrieve {}'.format(str(error)))
     return {'username': username, 'password': password}
