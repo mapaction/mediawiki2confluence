@@ -12,6 +12,7 @@ mwclient = "*"
 pypandoc = "*"
 panflute = "*"
 "beautifulsoup4" = "*"
+requests = "*"
 
 [dev-packages]
 ipython = "*"

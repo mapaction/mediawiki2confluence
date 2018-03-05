@@ -2,7 +2,8 @@
 
 from setuptools import find_packages, setup
 
-dependencies = ['click', 'mwclient', 'pypandoc', 'panflute', 'beautifulsoup4']
+dependencies = ['click', 'mwclient', 'pypandoc',
+                'panflute', 'beautifulsoup4', 'requests']
 
 setup(
     name='m2c',
