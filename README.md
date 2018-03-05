@@ -18,7 +18,7 @@ With [pip] that is as easy as:
 [pip]: https://pip.pypa.io/en/stable/installing/
 
 ```
-$ pip install m2c
+$ pip install git+https://github.com/mapaction/mediawiki2confluence
 ```
 
 ## Install Confluence CLI
