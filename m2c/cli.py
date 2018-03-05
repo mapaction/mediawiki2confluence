@@ -1,4 +1,5 @@
 import io
+import unicodedata
 import os
 from itertools import chain
 from os import environ
@@ -253,7 +254,11 @@ def space_from_page_name(name):
 
     try:
         cleaned = name.split(ANCHOR_MARKER)[0].replace('_', ' ')
-        page = [p for p in all_pages if cleaned in p.name][0]
+        page = [
+            p for p in all_pages
+            if cleaned in
+            unicodedata.normalize("NFKD", p.name)
+        ][0]
         return parse_space(page)
     except IndexError:
         click.echo('Failed to determine space for {}'.format(name))
