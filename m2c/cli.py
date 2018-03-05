@@ -36,7 +36,8 @@ def get_mw_client():
         username = environ['MEDIAWIKI_USERNAME']
         password = environ['MEDIAWIKI_PASSWORD']
     except KeyError as error:
-        click.fail('Unable to retrieve {}'.format(str(error)))
+        click.echo('Unable to retrieve {}'.format(str(error)))
+        raise click.Abort()
 
     client = mwclient.Site(MEDIAWIKI_URL, path='/')
     client.login(username, password)
@@ -101,7 +102,9 @@ def get_credentials():
         username = environ['CONFLUENCE_USERNAME']
         password = environ['CONFLUENCE_PASSWORD']
     except KeyError as error:
-        click.fail('Unable to retrieve {}'.format(str(error)))
+        click.echo('Unable to retrieve {}'.format(str(error)))
+        raise click.Abort()
+
     return {'username': username, 'password': password}
 
 
