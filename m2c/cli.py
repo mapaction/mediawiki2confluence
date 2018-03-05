@@ -147,8 +147,11 @@ def run_confluence_cmd(command, verbose=False, debug=False):
         __import__('ipdb').set_trace()
 
     try:
-        return check_output(command)
+        return check_output(command, stderr=STDOUT)
     except (CalledProcessError, ValueError) as err:
+        if 'already exists' in str(err.stdout):
+            raise DuplicatePageException()
+
         click.echo('Failed to run command, saw: {}'.format(str(err)))
         with open(FAILURE_LOG, 'a') as handle:
             handle.write('Hard failure! Saw: {}\n'.format(str(err)))
@@ -443,6 +446,29 @@ def download_image(image):
     return location
 
 
+def handle_duplicate_page(args, kwargs, extra_labels, page,
+                          title, action, base, verbose, debug):
+    """Label and rename for duplicate pages as agreed."""
+    extra_labels += ['fixme-duplicate-page-conflict']
+    labels = parse_labels(page, extra_labels=extra_labels)
+    kwargs['labels'] = labels
+
+    unique_title = '{}-{}'.format(title, str(uuid4())[:8])
+    kwargs['title'] = unique_title
+
+    label_cmd = get_action_cmd(action, *args, **kwargs)
+    command = base + label_cmd
+
+    output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+
+    with open(FAILURE_LOG, 'a') as handle:
+        handle.write('{} was a duplicate. Renamed to {}'.format(
+            title, unique_title
+        ))
+
+    return output
+
+
 @click.group()
 def main():
     """m2c: A bespoke MediaWiki to Confluence migration tool."""
@@ -582,11 +608,14 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
         base = get_confluence_cmd()
         command = base + label_cmd
 
-        output = run_confluence_cmd(
-            command,
-            verbose=verbose,
-            debug=debug,
-        )
+        try:
+            output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+        except DuplicatePageException:
+            click.echo('Found duplicate page. Handling accordingly ...')
+            output = handle_duplicate_page(
+                args, kwargs, extra_labels, page,
+                title, action, base, verbose, debug
+            )
         click.echo(output)
 
 
@@ -634,11 +663,14 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
     base = get_confluence_cmd()
     command = base + label_cmd
 
-    output = run_confluence_cmd(
-        command,
-        verbose=verbose,
-        debug=debug,
-    )
+    try:
+        output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+    except DuplicatePageException:
+        click.echo('Found duplicate page. Handling accordingly ...')
+        output = handle_duplicate_page(
+            args, kwargs, extra_labels, page,
+            title, action, base, verbose, debug
+        )
     click.echo(output)
 
 
@@ -744,9 +776,13 @@ def migrate_category_pages(undo, verbose, limit, markdown, debug):
         base = get_confluence_cmd()
         command = base + label_cmd
 
-        output = run_confluence_cmd(
-            command,
-            verbose=verbose,
-            debug=debug,
-        )
+        try:
+            output = run_confluence_cmd(command, verbose=verbose, debug=debug)
+        except DuplicatePageException:
+            click.echo('Found duplicate page. Handling accordingly ...')
+            output = handle_duplicate_page(
+                args, kwargs, extra_labels, page,
+                title, action, base, verbose, debug
+            )
+
         click.echo(output)
