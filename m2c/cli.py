@@ -24,6 +24,11 @@ IMAGES_DIR = '{}/../images'.format(dirname(abspath(__file__)))
 CATEGORY_NAMESPACE = 14
 
 
+class DuplicatePageException(Exception):
+    """Duplicate page exception."""
+    pass
+
+
 def get_mw_client():
     """Build MediaWiki client connection."""
     try:
