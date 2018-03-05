@@ -28,8 +28,8 @@ The program expects a number of environment variables to work properly. Please e
 
 ```bash
 CONFLUENCE_COMMAND_PATH="${PWD}/propietary/atlassian-cli-7.6.0/confluence" # for example
-HTTP_BASIC_AUTH_USERNAME="stallman"
-HTTP_BASIC_AUTH_PASSWORD="freesoftwarefreesociety"
+CONFLUENCE_USERNAME="stallman"
+CONFLUENCE_PASSWORD="freesoftwarefreesociety"
 MEDIAWIKI_USERNAME='stallman'
 MEDIAWIKI_PASSWORD='ilikeparrots'
 ```
