@@ -373,15 +373,15 @@ def with_markdown(content, space, name):
     return convert_image_format(content)
 
 
-def parse_content(page, markdown, space):
-    """Retrieve the content of the page."""
+def build_migration_notice(page):
+    """Build markup for migration notice."""
     link = '<a href="https://{base}/index.php/{link}">{name}</a>'.format(
         base=MEDIAWIKI_URL,
         link=page.name.replace(' ', '_'),
         name=page.name
     )
 
-    migrated_notice = ((
+    return ((
         '<p><ac:structured-macro ac:name="note" ac:schema-version="1" '
         'ac:macro-id="63359400-3dc8-43af-897b-d82aa4529401"> '
         '<ac:parameter ac:name="title">{title}</ac:parameter> '
@@ -391,10 +391,15 @@ def parse_content(page, markdown, space):
         title='MediaWiki Migration Notice',
         notice=(
             'Please note, this page has been '
-            'automatically migrated from the '
+            'automatically migrated from the following'
             'MediaWiki page: {link}.'.format(link=link)
         )
     ))
+
+
+def parse_content(page, markdown, space):
+    """Retrieve the content of the page."""
+    migration_notice = build_migration_notice(page)
 
     toc_markup = ((
         '<p><ac:structured-macro ac:name="toc" ac:schema-version="1" '
@@ -406,7 +411,7 @@ def parse_content(page, markdown, space):
     if markdown:
         content = with_markdown(page.text(), space, page.name)
 
-    return toc_markup + content + migrated_notice
+    return toc_markup + content + migration_notice
 
 
 def parse_labels(page, extra_labels=[]):
