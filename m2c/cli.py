@@ -419,6 +419,7 @@ def build_migration_notice(page):
     )
 
     return ((
+        '<hr></hr> '
         '<p><ac:structured-macro ac:name="note" ac:schema-version="1" '
         'ac:macro-id="63359400-3dc8-43af-897b-d82aa4529401"> '
         '<ac:parameter ac:name="title">{title}</ac:parameter> '
@@ -428,7 +429,7 @@ def build_migration_notice(page):
         title='MediaWiki Migration Notice',
         notice=(
             'Please note, this page has been '
-            'automatically migrated from the following'
+            'automatically migrated from the following '
             'MediaWiki page: {link}.'.format(link=link)
         )
     ))
