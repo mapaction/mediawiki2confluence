@@ -256,6 +256,9 @@ def space_from_page_name(name):
     ANCHOR_MARKER = '#'
     DEFAULT_SPACE = 'generalguidance'
 
+    if ':Category:' in name:
+        name = name.replace(':Category:', 'Category:')
+
     try:
         cleaned = name.split(ANCHOR_MARKER)[0].replace('_', ' ')
         page = [
