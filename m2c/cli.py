@@ -150,7 +150,7 @@ def run_confluence_cmd(command, verbose=False, debug=False):
         pprint(command)
 
     if debug:
-        __import__('ipdb').set_trace()
+        __import__('pdb').set_trace()
 
     try:
         return check_output(command, stderr=STDOUT)
@@ -522,7 +522,7 @@ def main():
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the spaces')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+@click.option('--debug', is_flag=True, help='Drop into pdb for commands')
 def spaces(undo, verbose, debug):
     """Create top level spaces and label them."""
     space_keys = get_static_spaces()
@@ -571,7 +571,7 @@ def spaces(undo, verbose, debug):
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the categories')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+@click.option('--debug', is_flag=True, help='Drop into pdb for commands')
 def categories(undo, verbose, debug):
     """Migrate MediaWiki categories."""
     AGREED_SPACE = 'general-guidance'
@@ -602,7 +602,7 @@ def categories(undo, verbose, debug):
 @click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--limit', default=None, help='Limit the number of pages')
-@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+@click.option('--debug', is_flag=True, help='Drop into pdb for commands')
 def pages(undo, verbose, limit, debug):
     """Migrates pages from MediaWiki."""
     if limit is not None:
@@ -661,7 +661,7 @@ def pages(undo, verbose, limit, debug):
 @click.argument('page-title')
 @click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+@click.option('--debug', is_flag=True, help='Drop into pdb for commands')
 def page(page_title, undo, verbose, debug):
     """Migrate a single from MediaWiki."""
     try:
@@ -716,7 +716,7 @@ def page(page_title, undo, verbose, debug):
 
 @main.command()
 @click.option('--undo', is_flag=True, help='Undo creation of the images')
-@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+@click.option('--debug', is_flag=True, help='Drop into pdb for commands')
 @click.option('--limit', default=None, help='Limit the number of images')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 def images(undo, debug, limit, verbose):
@@ -779,7 +779,7 @@ def images(undo, debug, limit, verbose):
 @click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--limit', default=None, help='Limit the number of pages')
-@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
+@click.option('--debug', is_flag=True, help='Drop into pdb for commands')
 def category_pages(undo, verbose, limit, debug):
     """Migrates category pages from MediaWiki."""
     if limit is not None:
