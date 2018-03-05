@@ -754,7 +754,7 @@ def migrate_category_pages(undo, verbose, limit, markdown, debug):
         title = parse_category_page_title(page)
         content = parse_content(page, markdown=markdown, space=space)
 
-        extra_labels = ['fixme-was-a-category-page']
+        extra_labels = ['fixme-was-a-category-page', category_cleaner(title)]
         if '{{:' in content:
             extra_labels.append(['fixme-transclusion-markup-unhandled'])
         if 'REDIRECT' in content:
