@@ -2,9 +2,12 @@
 
 [MediaWiki] migration scripts by [Aptivate] for [MapAction].
 
+For Aptivate staff, please see [CONTRIBUTING.md].
+
 [MediaWiki]: https://www.mediawiki.org/wiki/MediaWiki
 [Aptivate]: http://www.aptivate.org
 [MapAction]: https://mapaction.org
+[CONTRIBUTING.md]: https://github.com/mapaction/mediawiki2confluence/blob/master/CONTRIBUTING.md
 
 # Getting Started
 
@@ -61,7 +64,3 @@ $ m2c page "Windows 7 manual install"
 ```
 
 This will migrate a single page. Use `--undo` to remove the page.
-
-# Development
-
-See `CONTRIBUTING.md`.
