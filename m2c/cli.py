@@ -314,8 +314,9 @@ def back_to_markdown(document):
     """Convert a Panflute JSON document back to markdown."""
     return pypandoc.convert_text(
         back_to_content(document),
-        'markdown_mmd',
+        'markdown_strict',
         format='json',
+        extra_args=['--wrap=none']
     )
 
 
