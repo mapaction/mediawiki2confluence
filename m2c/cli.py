@@ -24,6 +24,7 @@ MEDIAWIKI_URL = 'mediawiki.mapaction.org'
 IMAGES_DIR = '{}/../images'.format(dirname(abspath(__file__)))
 
 CATEGORY_NAMESPACE = 14
+MAIN_NAMESPACE = 0
 
 
 class DuplicatePageException(Exception):
@@ -48,7 +49,7 @@ def get_mw_client():
 
 mwsite = get_mw_client()
 
-main_pages = [p for p in mwsite.allpages()]
+main_pages = [p for p in mwsite.allpages(namespace=MAIN_NAMESPACE)]
 cat_pages = [p for p in mwsite.allpages(namespace=CATEGORY_NAMESPACE)]
 all_pages = main_pages + cat_pages
 
