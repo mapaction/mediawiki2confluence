@@ -263,8 +263,8 @@ def space_from_page_name(name):
         cleaned = name.split(ANCHOR_MARKER)[0].replace('_', ' ')
         page = [
             p for p in all_pages
-            if cleaned in
-            unicodedata.normalize("NFKD", p.name)
+            if cleaned.lower() in
+            unicodedata.normalize("NFKD", p.name.lower())
         ][0]
         return parse_space(page)
     except IndexError:
