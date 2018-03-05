@@ -376,8 +376,8 @@ def with_markdown(content, space, name):
         click.echo('Failed to parse into JSON! Continuing ...')
         with open(FAILURE_LOG, 'a') as handle:
             handle.write((
-                'Failed to re-write links and '
-                'drop categories for page {}\n'.format(name)
+                'Failed to parse content. Could not re-write links'
+                'and drop categories for page {}\n'.format(name)
             ))
 
     return convert_image_format(content)
@@ -754,11 +754,11 @@ def migrate_category_pages(undo, verbose, limit, markdown, debug):
         title = parse_category_page_title(page)
         content = parse_content(page, markdown=markdown, space=space)
 
-        extra_labels = ['FIXME-was-a-category-page']
+        extra_labels = ['fixme-was-a-category-page']
         if '{{:' in content:
-            extra_labels.append(['FIXME-transclusion-markup-unhandled'])
+            extra_labels.append(['fixme-transclusion-markup-unhandled'])
         if 'REDIRECT' in content:
-            extra_labels.append(['FIXME-redirect-page'])
+            extra_labels.append(['fixme-redirect-page'])
         labels = parse_labels(page, extra_labels=extra_labels)
 
         kwargs = dict(
