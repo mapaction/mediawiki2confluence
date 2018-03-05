@@ -234,6 +234,8 @@ def parse_space(page):
 
 def parse_title(page):
     """Parse the title of the page."""
+    if 'Category:' in page.name:
+        return page.name.replace('Category', '')
     return page.name
 
 
