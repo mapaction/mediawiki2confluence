@@ -1,4 +1,5 @@
 import io
+import os
 from itertools import chain
 from os import environ
 from os.path import abspath, dirname
@@ -14,7 +15,7 @@ import mwclient
 import panflute
 import pypandoc
 
-FAILURE_LOG = 'failure.log'
+FAILURE_LOG = 'm2c.log'
 
 
 CONFLUENCE_URL = 'https://wiki-test.mapaction.org'
@@ -420,8 +421,7 @@ def build_label_macro(label):
     ).format(label)
 
 
-def parse_content(page, markdown, space,
-                  category_page=False, title=None):
+def parse_content(page, space, category_page=False, title=None):
     """Retrieve the content of the page."""
     migration_notice = build_migration_notice(page)
 
@@ -431,9 +431,7 @@ def parse_content(page, markdown, space,
         '\n'
     ))
 
-    content = page.text()
-    if markdown:
-        content = with_markdown(page.text(), space, page.name)
+    content = with_markdown(page.text(), space, page.name)
 
     if category_page and title is not None:
         label_macro = build_label_macro(category_cleaner(title))
@@ -499,8 +497,8 @@ def main():
 @click.option('--undo', is_flag=True, help='Undo creation of the spaces')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-def static_spaces(undo, verbose, debug):
-    """Create top level spaces"""
+def spaces(undo, verbose, debug):
+    """Create top level spaces and label them."""
     space_keys = get_static_spaces()
 
     for space_key in space_keys:
@@ -521,15 +519,6 @@ def static_spaces(undo, verbose, debug):
             debug=debug,
         )
         click.echo(output)
-
-
-@main.command()
-@click.option('--undo', is_flag=True, help='Undo creation of the labels')
-@click.option('--verbose', is_flag=True, help='The computer will speak to you')
-@click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-def static_labels(undo, verbose, debug):
-    """Create labels on top level spaces"""
-    space_keys = get_static_spaces()
 
     for key, space_dict in zip(space_keys, TOP_LEVEL_SPACES):
         labels = space_dict[key]['labels']
@@ -557,7 +546,7 @@ def static_labels(undo, verbose, debug):
 @click.option('--undo', is_flag=True, help='Undo creation of the categories')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-def migrate_categories(undo, verbose, debug):
+def categories(undo, verbose, debug):
     """Migrate MediaWiki categories."""
     AGREED_SPACE = 'general-guidance'
 
@@ -587,9 +576,8 @@ def migrate_categories(undo, verbose, debug):
 @click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--limit', default=None, help='Limit the number of pages')
-@click.option('--markdown', is_flag=True, help='Migrate with markdown')
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-def migrate_pages(undo, verbose, limit, markdown, debug):
+def migrate_pages(undo, verbose, limit, debug):
     """Migrates pages from MediaWiki."""
     if limit is not None:
         pages = main_pages[:int(limit)]
@@ -601,7 +589,7 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
 
         space = parse_space(page)
         title = parse_title(page)
-        content = parse_content(page, markdown=markdown, space=space)
+        content = parse_content(page, space=space)
         labels = parse_labels(page)
 
         if 'REDIRECT' in content:
@@ -622,8 +610,7 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
             labels=labels
         )
 
-        if markdown:
-            args = ['markdown']
+        args = ['markdown']
 
         if undo:
             action, kwargs = 'removePage', dict(space=space, title=title)
@@ -647,9 +634,8 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
 @click.argument('page-title')
 @click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-@click.option('--markdown', is_flag=True, help='Migrate with markdown')
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-def migrate_page(page_title, undo, verbose, markdown, debug):
+def page(page_title, undo, verbose, debug):
     """Migrate a single from MediaWiki."""
     try:
         page = [p for p in all_pages if page_title in p.name][0]
@@ -661,7 +647,7 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
 
     space = parse_space(page)
     title = parse_title(page)
-    content = parse_content(page, markdown=markdown, space=space)
+    content = parse_content(page, space=space)
 
     if 'REDIRECT' in content:
         click.echo('Dropping redirect page. Continuing ...')
@@ -681,8 +667,7 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
         labels=labels
     )
 
-    if markdown:
-        args = ['markdown']
+    args = ['markdown']
 
     if undo:
         action, kwargs = 'removePage', dict(space=space, title=title)
@@ -707,8 +692,11 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
 @click.option('--limit', default=None, help='Limit the number of images')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
-def migrate_images(undo, debug, limit, verbose):
+def images(undo, debug, limit, verbose):
     """Migrates images from MediaWiki."""
+    if not os.path.exists('images'):
+        os.makedirs('images')
+
     if limit is not None:
         pages = all_pages[:int(limit)]
     else:
@@ -764,9 +752,8 @@ def migrate_images(undo, debug, limit, verbose):
 @click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--limit', default=None, help='Limit the number of pages')
-@click.option('--markdown', is_flag=True, help='Migrate with markdown')
 @click.option('--debug', is_flag=True, help='Drop into ipdb for commands')
-def migrate_category_pages(undo, verbose, limit, markdown, debug):
+def category_pages(undo, verbose, limit, debug):
     """Migrates category pages from MediaWiki."""
     if limit is not None:
         pages = cat_pages[:int(limit)]
@@ -780,7 +767,6 @@ def migrate_category_pages(undo, verbose, limit, markdown, debug):
         title = parse_category_page_title(page)
         content = parse_content(
             page,
-            markdown=markdown,
             space=space,
             category_page=True,
             title=title,
@@ -800,8 +786,7 @@ def migrate_category_pages(undo, verbose, limit, markdown, debug):
             labels=labels
         )
 
-        if markdown:
-            args = ['markdown']
+        args = ['markdown']
 
         if undo:
             action, kwargs = 'removePage', dict(space=space, title=title)

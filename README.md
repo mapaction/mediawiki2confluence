@@ -1,4 +1,4 @@
-# mediawiki2confluence
+# m2c
 
 [MediaWiki] migration scripts by [Aptivate] for [MapAction].
 
@@ -6,33 +6,31 @@
 [Aptivate]: http://www.aptivate.org
 [MapAction]: https://mapaction.org
 
-# Install The Free Software
+# Getting Started
 
-Get a local copy of [pipenv] and then run:
+## Install m2c
 
-[pipenv]: https://docs.pipenv.org
+With [pip] that is as easy as:
 
-```bash
-$ pipenv install --dev
+[pip]: https://pip.pypa.io/en/stable/installing/
+
+```
+$ pip install m2c
 ```
 
-# Install the Non-Free Software
+## Install Confluence CLI
 
-You'll need a CLI tool from the Confluence. Follow the instructions at:
+You'll need the Confluence CLI tool. Follow the instructions at:
 
-> https://bobswift.atlassian.net/wiki/spaces/CSOAP/pages/10584068/Reference
+> https://wiki-test.mapaction.org/admin/plugins/org.swift.confluence.cli/getstarted.action
 
-Untar that file in the ignored `propietary` folder in this repository.
+## Configure Environment
 
-For usage, refer to the [action reference] for commands.
+The `m2c` tool expects a number of values exposed in your environment.
 
-[action reference]: https://bobswift.atlassian.net/wiki/spaces/CSOAP/overview
+Here's an example of what that might look like:
 
-# Configure the Environment
-
-The program expects a number of environment variables to work properly. Please export:
-
-```bash
+```
 CONFLUENCE_COMMAND_PATH="${PWD}/propietary/atlassian-cli-7.6.0/confluence" # for example
 HTTP_BASIC_AUTH_USERNAME="stallman"
 HTTP_BASIC_AUTH_PASSWORD="freesoftwarefreesociety"
@@ -40,58 +38,30 @@ MEDIAWIKI_USERNAME='stallman'
 MEDIAWIKI_PASSWORD='ilikeparrots'
 ```
 
-# Use the CLI Tool
+## Running The Migration
 
-Once you've ran the `pipenv` incantation, you can access the tool with:
-
-```
-$ pipenv run m2c --help
-```
-
-Or drop into a pipenv managed shell and run commands with:
+The migration is run in a number of steps:
 
 ```
-$ pipenv shell
-$ m2c --help
+$ m2c spaces
+$ m2c categories
+$ m2c pages
+$ m2c category_pages
+$ m2c images
 ```
 
-# Run Things in Order
+You can review the logs in `m2c.log` in your current working directory.
 
-First of all, create a image downloads directory with:
+## Dealing with Individual Pages
 
-```bash
-$ mkdir -p images
-```
-
-The migration is run manually in steps, so far:
+You can run the following:
 
 ```
-$ m2c static_spaces
-$ m2c static_labels
-$ m2c migrate_categories
-$ m2c migrate_pages --markdown
-$ m2c migrate_category_pages --markdown
-$ m2c migrate_images
+$ m2c page "Windows 7 manual install"
 ```
 
-# From Where To Where?
+This will migrate a single page. Use `--undo` to remove the page.
 
-> https://mediawiki.mapaction.org
+# Development
 
-To:
-
-> https://wiki-test.mapaction.org
-
-# Planning
-
-We're organising on this [Trello] board:
-
-[Trello]: https://trello.com
-
-> https://trello.com/b/KDErLd9q
-
-# Labels
-
-  * `fixme-transclusion-markup-unhandled`
-  * `fixme-was-a-category-page`
-  * `fixme-duplicate-page-conflict`
+See `CONTRIBUTING.md`.
