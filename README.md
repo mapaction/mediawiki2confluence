@@ -94,5 +94,4 @@ We're organising on this [Trello] board:
 
   * `fixme-transclusion-markup-unhandled`
   * `fixme-was-a-category-page`
-  * `fixme-redirect-page`
   * `fixme-duplicate-page-conflict`

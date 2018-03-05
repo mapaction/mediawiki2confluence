@@ -468,7 +468,7 @@ def download_image(image):
 def handle_duplicate_page(args, kwargs, extra_labels, page,
                           title, action, base, verbose, debug):
     """Label and rename for duplicate pages as agreed."""
-    extra_labels += ['fixme-duplicate-page-conflict']
+    extra_labels += [['fixme-duplicate-page-conflict']]
     labels = parse_labels(page, extra_labels=extra_labels)
     kwargs['labels'] = labels
 
@@ -481,7 +481,7 @@ def handle_duplicate_page(args, kwargs, extra_labels, page,
     output = run_confluence_cmd(command, verbose=verbose, debug=debug)
 
     with open(FAILURE_LOG, 'a') as handle:
-        handle.write('{} was a duplicate. Renamed to {}'.format(
+        handle.write('{} was a duplicate. Renamed to {}\n'.format(
             title, unique_title
         ))
 
@@ -603,11 +603,15 @@ def migrate_pages(undo, verbose, limit, markdown, debug):
         content = parse_content(page, markdown=markdown, space=space)
         labels = parse_labels(page)
 
+        if 'REDIRECT' in content:
+            click.echo('Dropping redirect page. Continuing ...')
+            with open(FAILURE_LOG, 'a') as handle:
+                handle.write('Dropping redirect page {}\n'.format(title))
+            continue
+
         extra_labels = []
         if "{{:" in content:
             extra_labels.append(['fixme-transclusion-markup-unhandled'])
-        if 'REDIRECT' in content:
-            extra_labels.append(['fixme-redirect-page'])
         labels = parse_labels(page, extra_labels=extra_labels)
 
         kwargs = dict(
@@ -658,11 +662,15 @@ def migrate_page(page_title, undo, verbose, markdown, debug):
     title = parse_title(page)
     content = parse_content(page, markdown=markdown, space=space)
 
+    if 'REDIRECT' in content:
+        click.echo('Dropping redirect page. Continuing ...')
+        with open(FAILURE_LOG, 'a') as handle:
+            handle.write('Dropping redirect page {}\n'.format(title))
+        return
+
     extra_labels = []
     if '{{:' in content:
         extra_labels.append(['fixme-transclusion-markup-unhandled'])
-    if 'REDIRECT' in content:
-        extra_labels.append(['fixme-redirect-page'])
     labels = parse_labels(page, extra_labels=extra_labels)
 
     kwargs = dict(
