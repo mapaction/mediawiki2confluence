@@ -54,9 +54,6 @@ cat_pages = [p for p in mwsite.allpages(namespace=CATEGORY_NAMESPACE)]
 all_pages = main_pages + cat_pages
 
 
-# Please note, this was generated based on the comments in
-# https://docs.google.com/spreadsheets/d/1MGapwHaEAdcvD98HzYw91Ze295xI7SQKE0NPmf_pE6g/edit?usp=sharing
-# Updated format due to https://jira.atlassian.com/browse/CONFSERVER-7934
 TOP_LEVEL_SPACES = [
     {'migration-general-guidance': {'labels': []}},
     {'migration-standard-procedures': {
