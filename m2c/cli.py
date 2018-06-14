@@ -1,4 +1,3 @@
-import html
 import io
 import unicodedata
 import os
@@ -456,14 +455,12 @@ def parse_content(page, space, category_page=False, title=None):
     ))
 
     content = with_markdown(page.text(), space, page.name)
-    normalized_content = unicodedata.normalize('NFKD', content)
-    escaped_content = html.escape(normalized_content)
 
     if category_page and title is not None:
         label_macro = build_label_macro(category_cleaner(title))
-        return toc_markup + escaped_content + label_macro + migration_notice
+        return toc_markup + content + label_macro + migration_notice
 
-    return toc_markup + escaped_content + migration_notice
+    return toc_markup + content + migration_notice
 
 
 def parse_labels(page, extra_labels=[]):
