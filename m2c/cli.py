@@ -229,7 +229,7 @@ def parse_space(page):
         if set(mw_categories).intersection(cleaned):
             return key.replace('-', '')
 
-    return 'general-guidance'.replace('-', '')
+    return 'migration-general-guidance'.replace('-', '')
 
 
 def parse_title(page):
@@ -254,7 +254,7 @@ def drop_loose_categories(elem, doc):
 def space_from_page_name(name):
     """Determine space name from a page URL."""
     ANCHOR_MARKER = '#'
-    DEFAULT_SPACE = 'generalguidance'
+    DEFAULT_SPACE = 'migrationgeneralguidance'
 
     if ':Category:' in name:
         name = name.replace(':Category:', 'Category:')
@@ -574,7 +574,7 @@ def spaces(undo, verbose, debug):
 @click.option('--debug', is_flag=True, help='Drop into pdb for commands')
 def categories(undo, verbose, debug):
     """Migrate MediaWiki categories."""
-    AGREED_SPACE = 'general-guidance'
+    AGREED_SPACE = 'migration-general-guidance'
 
     labels = [label for label in get_static_labels()]
     cleaned_labels = list(map(category_cleaner, labels))
