@@ -58,8 +58,8 @@ all_pages = main_pages + cat_pages
 # https://docs.google.com/spreadsheets/d/1MGapwHaEAdcvD98HzYw91Ze295xI7SQKE0NPmf_pE6g/edit?usp=sharing
 # Updated format due to https://jira.atlassian.com/browse/CONFSERVER-7934
 TOP_LEVEL_SPACES = [
-    {'general-guidance': {'labels': []}},
-    {'standard-procedures': {
+    {'migration-general-guidance': {'labels': []}},
+    {'migration-standard-procedures': {
         'labels': [
             'Current SOPs, SAPs and Security Manual',
             'Security Manual',
@@ -81,7 +81,7 @@ TOP_LEVEL_SPACES = [
             'Standard Operational Procedures',
         ]
     }},
-    {'internal-training': {
+    {'migration-internal-training': {
         'labels': [
             '2017 Team Training',
             '2016 Team Training',
