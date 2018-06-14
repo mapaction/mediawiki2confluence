@@ -19,7 +19,7 @@ import pypandoc
 FAILURE_LOG = 'm2c.log'
 
 
-CONFLUENCE_URL = 'https://wiki.mapaction.org'
+CONFLUENCE_URL = 'http://wiki.mapaction.org'
 MEDIAWIKI_URL = 'mediawiki.mapaction.org'
 IMAGES_DIR = '{}/../images'.format(dirname(abspath(__file__)))
 
