@@ -21,6 +21,12 @@ With [pip] that is as easy as:
 $ pip install git+https://github.com/mapaction/mediawiki2confluence
 ```
 
+## Install System Dependencies
+
+You'll need:
+
+  * https://pandoc.org/installing.html
+
 ## Install Confluence CLI
 
 You'll need the Confluence CLI tool. Follow the instructions at:
