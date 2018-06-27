@@ -31,6 +31,9 @@ class DuplicatePageException(Exception):
     """Duplicate page exception."""
     pass
 
+class UnrecognisedFormattingException(Exception):
+    """Unrecognised formatting exception."""
+    pass
 
 def get_mw_client():
     """Build MediaWiki client connection."""
@@ -140,7 +143,7 @@ def get_action_cmd(action, *args, **kwargs):
     return [part for part in chain(*command)]
 
 
-def run_confluence_cmd(command, verbose=False, debug=False):
+def run_confluence_cmd(command, verbose=False, debug=False, raiseExceptions=True):
     """Run a confluence CLI command. Accepts a list."""
     if verbose is True:
         click.echo('Executing the following command:')
@@ -152,9 +155,12 @@ def run_confluence_cmd(command, verbose=False, debug=False):
     try:
         return check_output(command, stderr=STDOUT)
     except (CalledProcessError, ValueError) as err:
-        if 'already exists' in str(err.stdout):
-            raise DuplicatePageException()
-
+        if raiseExceptions:
+            if 'already exists' in str(err.stdout):
+                raise DuplicatePageException()
+            if 'returned non-zero exit status 253' in str(err.stdout):
+                raise UnrecognisedFormattingException()
+				
         click.echo('Failed to run command, saw: {}'.format(str(err)))
         with open(FAILURE_LOG, 'a') as handle:
             handle.write('Hard failure! Saw: {}\n'.format(str(err)))
@@ -444,15 +450,18 @@ def build_label_macro(label):
     ).format(label)
 
 
-def parse_content(page, space, category_page=False, title=None):
+def parse_content(page, space, category_page=False, title=None, skip_toc=False):
     """Retrieve the content of the page."""
     migration_notice = build_migration_notice(page)
 
-    toc_markup = ((
-        '<p><ac:structured-macro ac:name="toc" ac:schema-version="1" '
-        'ac:macro-id="a4c703fc-b0db-4716-bc78-8682460e8220"/></p>'
+    if skip_toc:
+        toc_markup = ''
+    else:
+        toc_markup = ((
+            '<p><ac:structured-macro ac:name="toc" ac:schema-version="1" '
+            'ac:macro-id="a4c703fc-b0db-4716-bc78-8682460e8220"/></p>'
         '\n'
-    ))
+        ))
 
     content = with_markdown(page.text(), space, page.name)
 
@@ -505,6 +514,27 @@ def handle_duplicate_page(args, kwargs, extra_labels, page,
     with open(FAILURE_LOG, 'a') as handle:
         handle.write('{} was a duplicate. Renamed to {}\n'.format(
             title, unique_title
+        ))
+
+    return output
+
+def handle_toc_formating_problems(args, kwargs, extra_labels, page,
+                          title, action, base, verbose, debug):
+    """Label and rename for duplicate pages as agreed."""
+    extra_labels.append('fixme-suspected-toc-formatting-error')
+    labels = parse_labels(page, extra_labels=extra_labels)
+    kwargs['labels'] = labels
+
+    kwargs['content'] = parse_content(page, space=kwargs['space'], skip_toc=True)
+
+    label_cmd = get_action_cmd(action, *args, **kwargs)
+    command = base + label_cmd
+
+    output = run_confluence_cmd(command, verbose=verbose, debug=debug, raiseExceptions=False)
+
+    with open(FAILURE_LOG, 'a') as handle:
+        handle.write('{} failed on first attempt. Retried without TOC\n'.format(
+            title
         ))
 
     return output
@@ -651,6 +681,13 @@ def pages(undo, verbose, limit, debug):
                 args, kwargs, extra_labels, page,
                 title, action, base, verbose, debug
             )
+        except UnrecognisedFormattingException:
+            click.echo('Page upload failed for some reason. Retrying without a TOC...')
+            output = handle_toc_formating_problems(
+                args, kwargs, extra_labels, page,
+                title, action, base, verbose, debug
+            )
+
         click.echo(output)
 
 
@@ -659,7 +696,8 @@ def pages(undo, verbose, limit, debug):
 @click.option('--undo', is_flag=True, help='Undo creation of the pages')
 @click.option('--verbose', is_flag=True, help='The computer will speak to you')
 @click.option('--debug', is_flag=True, help='Drop into pdb for commands')
-def page(page_title, undo, verbose, debug):
+@click.option('--skip-toc'), is_flag=False, help='Do not attempt to insert a table of contents macro at the start of the page')
+def page(page_title, undo, verbose, debug, skip_toc):
     """Migrate a single from MediaWiki."""
     try:
         page = [p for p in all_pages if page_title in p.name][0]
@@ -671,7 +709,7 @@ def page(page_title, undo, verbose, debug):
 
     space = parse_space(page)
     title = parse_title(page)
-    content = parse_content(page, space=space)
+    content = parse_content(page, space=space, skip_toc=skip_toc)
 
     if 'REDIRECT' in content:
         click.echo('Dropping redirect page. Continuing ...\n')
