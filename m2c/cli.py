@@ -155,6 +155,8 @@ def run_confluence_cmd(command, verbose=False, debug=False, raiseExceptions=True
     try:
         return check_output(command, stderr=STDOUT)
     except (CalledProcessError, ValueError) as err:
+        # This is to prevent us getting into an infinite loop if
+        # the second upload fails (ie the one without the TOC).
         if raiseExceptions:
             if 'already exists' in str(err.stdout):
                 raise DuplicatePageException()
