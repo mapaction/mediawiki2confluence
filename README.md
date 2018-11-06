@@ -11,6 +11,8 @@ For Aptivate staff, please see [CONTRIBUTING.md].
 
 # Getting Started
 
+_**These scripts were written for a one-time migration of content from Mediawiki to Confluence. They are not maintained and are provided for convenience only. We are aware that there is now a potential security vulnerability in one of the dependencies (requests==2.18.4). You are advised to review, fix and submit a Pull Request this before using mediawiki2confluence.**_
+
 ## Install m2c
 
 With [pip] that is as easy as:
